@@ -3,6 +3,7 @@
 <head>
     <link rel="icon" href="/static/words/images/favicon.ico?v=2" type="image/x-icon">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>全部完成 - VocabMaster</title>
     <style>
         body {
@@ -33,6 +34,22 @@
             transition: all 0.3s;
         }
         a:hover { background: #5568d3; transform: scale(1.05); }
+    
+        /* 移动端适配 */
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .message, .login-box, .form-box, .game-container, .ranking-box {
+                padding: 1.5rem !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
+            }
+            h1 { font-size: 1.3rem !important; }
+            p { font-size: 0.9rem !important; }
+            input, select, button { font-size: 14px !important; }
+        }
     </style>
 </head>
 <body>
