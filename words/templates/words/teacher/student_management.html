@@ -10,33 +10,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; min-height: 100vh; display: flex; }
 
-        /* === 侧栏 === */
-        .sidebar {
-            width: 220px;
-            min-width: 220px;
-            background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-        }
-        .sidebar-logo { padding: 1.5rem 1.25rem; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
-        .sidebar-nav { flex: 1; padding: 1rem 0; }
-        .sidebar-nav a {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.7rem 1.25rem; color: rgba(255,255,255,0.8);
-            text-decoration: none; font-size: 0.9rem; transition: all 0.15s;
-        }
-        .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: white; }
-        .sidebar-nav a.active { background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-left: 3px solid white; }
-        .sidebar-nav .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.75rem 1.25rem; }
-        .sidebar-bottom { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.15); }
-        .sidebar-bottom a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0; }
-        .sidebar-bottom a:hover { color: white; }
-
         /* === 主内容区 === */
         .main { flex: 1; min-width: 0; }
         .top-bar {
@@ -116,6 +89,14 @@
         .btn-del { padding: 0.35rem 0.7rem; background: rgba(239,68,68,0.1); color: #ef4444; border: none; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
         .btn-del:hover { background: #ef4444; color: white; }
 
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .stats-banner { flex-direction: column; gap: 0.5rem; padding: 1rem; }
+            .filter-bar { flex-direction: column; }
+            .student-table { overflow-x: auto; }
+            .student-table table { min-width: 700px; }
+        }
+
         .empty-state { text-align: center; padding: 4rem 2rem; color: #94a3b8; }
         .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
 
@@ -125,29 +106,7 @@
     </style>
 </head>
 <body>
-    <!-- 侧栏 -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">📚 VocabMaster</div>
-        <nav class="sidebar-nav">
-            <a href="{% url 'teacher_dashboard' %}">🏠 控制台</a>
-            <a href="{% url 'student_management' %}" class="active">👨‍🎓 学生管理</a>
-            <a href="{% url 'import_students' %}">⬆️ 导入学生</a>
-            <div class="divider"></div>
-            <a href="{% url 'word_management' %}">📖 单词管理</a>
-            <a href="{% url 'add_word' %}">➕ 添加单词</a>
-            <a href="{% url 'bulk_add_words' %}">📦 批量添加</a>
-            <div class="divider"></div>
-            <a href="{% url 'homework_management' %}">✏️ 作业管理</a>
-            <a href="{% url 'create_homework' %}">📝 布置作业</a>
-            <div class="divider"></div>
-            <a href="{% url 'generate_code' %}">🔑 注册码</a>
-            <a href="{% url 'class_management' %}">🏫 班级管理</a>
-        </nav>
-        <div class="sidebar-bottom">
-            <a href="{% url 'teacher_change_password' %}">🔐 修改密码</a>
-            <a href="{% url 'logout' %}">🚪 退出登录</a>
-        </div>
-    </aside>
+    {% with active_page="students" %}{% include "words/teacher/_sidebar.html" %}{% endwith %}
 
     <!-- 主区域 -->
     <div class="main">

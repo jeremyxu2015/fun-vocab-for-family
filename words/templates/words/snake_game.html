@@ -78,6 +78,47 @@
         body.flash-correct { animation: flash-green 0.4s; }
         body.flash-wrong { animation: flash-red 0.4s; }
 
+        /* 虚拟摇杆 — 只在移动端 */
+        .joystick-wrap { display: none; }
+        .desktop-only { display: block; }
+
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .word-bar .word { font-size: 1.6rem; }
+            .word-bar { padding: 0.5rem 1rem; }
+            .hud { padding: 0.3rem 1rem; gap: 1.5rem; }
+            .hud-item .val { font-size: 1.1rem; }
+            .canvas-wrap { padding: 0.15rem; }
+
+            .joystick-wrap {
+                display: flex; align-items: center; justify-content: center;
+                padding: 0.5rem 1rem 0.75rem; background: #1e293b; width: 100%;
+                gap: 1.5rem;
+            }
+            .joystick-base {
+                width: 140px; height: 140px;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .joystick-arrows {
+                display: flex; flex-direction: column; align-items: center; gap: 0;
+            }
+            .joy-mid-row { display: flex; align-items: center; gap: 0; }
+            .joy-btn {
+                width: 48px; height: 48px;
+                background: rgba(99,102,241,0.3); border: 2px solid rgba(99,102,241,0.5);
+                color: white; font-size: 1.2rem; border-radius: 10px;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer; user-select: none;
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            .joy-btn:active { background: rgba(99,102,241,0.7); transform: scale(0.92); }
+            .joy-center { width: 48px; height: 48px; }
+            .joy-up { margin-bottom: -2px; }
+            .joy-down { margin-top: -2px; }
+            .mobile-back { color: #6366f1; text-decoration: none; font-size: 0.85rem; }
+        }
+
         /* 联机模式 UI */
         .mp-bar {
             display: none; width: 100%; padding: 0.4rem 1rem;
@@ -114,9 +155,25 @@
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <div class="controls">
+    <div class="controls desktop-only">
         ⬆️⬇️⬅️➡️ 方向键 &nbsp;|&nbsp; 🧱 撞墙 -1❤️ &nbsp;|&nbsp; ✅ 吃对 +1❤️ &nbsp;|&nbsp; ❌ 吃错 -1❤️
         <a href="{% url 'dashboard' %}">← 返回首页</a>
+    </div>
+
+    <!-- 移动端虚拟摇杆 -->
+    <div class="joystick-wrap" id="joystickWrap">
+        <div class="joystick-base" id="joystickBase">
+            <div class="joystick-arrows">
+                <button class="joy-btn joy-up" data-dir="up">▲</button>
+                <div class="joy-mid-row">
+                    <button class="joy-btn joy-left" data-dir="left">◀</button>
+                    <div class="joy-center"></div>
+                    <button class="joy-btn joy-right" data-dir="right">▶</button>
+                </div>
+                <button class="joy-btn joy-down" data-dir="down">▼</button>
+            </div>
+        </div>
+        <a href="{% url 'dashboard' %}" class="mobile-back">← 返回</a>
     </div>
 
     <!-- 模式选择弹窗 -->
@@ -595,6 +652,19 @@
                 else if(dy < -20 && dir.y===0) nextDir={x:0,y:-1};
             }
             touchStart = null;
+        });
+
+        // ——— 移动端虚拟摇杆 ———
+        document.querySelectorAll('.joy-btn').forEach(btn => {
+            function handleDir(){
+                const d = btn.dataset.dir;
+                if(d==='up' && dir.y===0) nextDir={x:0,y:-1};
+                else if(d==='down' && dir.y===0) nextDir={x:0,y:1};
+                else if(d==='left' && dir.x===0) nextDir={x:-1,y:0};
+                else if(d==='right' && dir.x===0) nextDir={x:1,y:0};
+            }
+            btn.addEventListener('touchstart', e => { e.preventDefault(); handleDir(); }, {passive:false});
+            btn.addEventListener('mousedown', e => { e.preventDefault(); handleDir(); });
         });
 
         // ——— 启动 ———

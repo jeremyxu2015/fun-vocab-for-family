@@ -1,6 +1,19 @@
-<!-- teacher/_sidebar.html — 教师侧栏导航 (include) -->
+<!-- teacher/_sidebar.html — 教师侧栏导航 (响应式) -->
+
+<!-- 移动端顶栏 -->
+<div class="mobile-topbar">
+    <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <span class="mobile-title">📚 VocabMaster</span>
+</div>
+
+<!-- 遮罩 -->
+<div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open')"></div>
+
 <aside class="sidebar">
-    <div class="sidebar-logo">📚 VocabMaster</div>
+    <div class="sidebar-logo">
+        📚 VocabMaster
+        <button class="sidebar-close" onclick="document.querySelector('.sidebar').classList.remove('open')">✕</button>
+    </div>
     <nav class="sidebar-nav">
         <a href="{% url 'teacher_dashboard' %}" {% if active_page == 'dashboard' %}class="active"{% endif %}>🏠 控制台</a>
         <a href="{% url 'student_management' %}" {% if active_page == 'students' %}class="active"{% endif %}>👨‍🎓 学生管理</a>
@@ -18,17 +31,25 @@
     </nav>
     <div class="sidebar-bottom">
         <a href="{% url 'teacher_change_password' %}">🔐 修改密码</a>
+        <a href="{% url 'dashboard' %}">👤 学生视图</a>
         <a href="{% url 'logout' %}">🚪 退出登录</a>
     </div>
 </aside>
 <style>
+    /* === 桌面端侧栏 === */
     .sidebar {
         width: 220px; min-width: 220px;
         background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
         color: white; display: flex; flex-direction: column;
         min-height: 100vh; position: sticky; top: 0; height: 100vh;
+        z-index: 50;
     }
-    .sidebar-logo { padding: 1.5rem 1.25rem; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .sidebar-logo {
+        padding: 1.5rem 1.25rem; font-weight: 800; font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .sidebar-close { display: none; background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
     .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
     .sidebar-nav a {
         display: flex; align-items: center; gap: 0.75rem;
@@ -41,4 +62,49 @@
     .sidebar-bottom { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.15); }
     .sidebar-bottom a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0; }
     .sidebar-bottom a:hover { color: white; }
+
+    /* 桌面端隐藏移动顶栏和遮罩 */
+    .mobile-topbar { display: none; }
+    .sidebar-overlay { display: none; }
+
+    /* === 移动端 === */
+    @media (max-width: 768px) {
+        .mobile-topbar {
+            display: flex; align-items: center; gap: 0.75rem;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white; padding: 0.75rem 1rem;
+            position: sticky; top: 0; z-index: 40;
+        }
+        .hamburger {
+            background: none; border: none; color: white;
+            font-size: 1.5rem; cursor: pointer; padding: 0.25rem;
+        }
+        .mobile-title { font-weight: 700; font-size: 1rem; }
+
+        .sidebar {
+            position: fixed; top: 0; left: -280px;
+            width: 260px; min-width: 260px; height: 100vh;
+            transition: left 0.25s ease; z-index: 60;
+        }
+        .sidebar.open { left: 0; }
+        .sidebar-close { display: block; }
+
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 55;
+        }
+        .sidebar.open ~ .sidebar-overlay,
+        .sidebar.open + .sidebar-overlay { display: block; }
+
+        /* body flex 在移动端改为纵向 */
+        body { flex-direction: column !important; }
+    }
 </style>
+<script>
+// 点击侧栏链接后自动关闭（移动端）
+document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    a.addEventListener('click', () => {
+        if(window.innerWidth <= 768) document.querySelector('.sidebar').classList.remove('open');
+    });
+});
+</script>
