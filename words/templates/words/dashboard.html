@@ -1,11 +1,11 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的学习 - VocabMaster</title>
-    <link rel="stylesheet" href="{% static 'words/css/modern.css' %}">
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
     <style>
         :root {
             --primary: #6366f1;
@@ -14,66 +14,161 @@
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
+            --info: #3b82f6;
             --bg-card: #ffffff;
             --bg-secondary: #f1f5f9;
             --text-primary: #1e293b;
             --text-secondary: #64748b;
             --radius-lg: 16px;
-            --radius-md: 12px;
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --sidebar-width: 240px;
         }
-        
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             min-height: 100vh;
-            margin: 0;
-            padding-bottom: 100px;
+            display: flex;
         }
-        
-        .navbar {
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 70px;
+            bottom: 0;
+            width: var(--sidebar-width);
             background: var(--bg-card);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.06);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
+            flex-direction: column;
             z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
         }
-        .logo {
-            font-size: 1.5rem;
+
+        .sidebar-logo {
+            padding: 1.5rem;
+            font-size: 1.35rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            border-bottom: 1px solid var(--bg-secondary);
+            flex-shrink: 0;
         }
-        .nav-links {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-        .nav-links a {
+
+        .sidebar-section {
+            padding: 1rem 0.75rem 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
             color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
-        .nav-links a:hover {
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.7rem 0.85rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+        .sidebar-link:hover {
+            background: var(--bg-secondary);
             color: var(--primary);
         }
-        
+        .sidebar-link.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .sidebar-link .link-icon {
+            font-size: 1.2rem;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .sidebar-link .link-badge {
+            margin-left: auto;
+            background: var(--warning);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 0.75rem;
+            border-top: 1px solid var(--bg-secondary);
+            flex-shrink: 0;
+        }
+        .sidebar-footer .sidebar-link {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        .sidebar-footer .sidebar-link:hover {
+            color: var(--error);
+        }
+
+        /* ========== 移动端菜单按钮 ========== */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1100;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            box-shadow: var(--shadow-md);
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+
+        /* ========== 主内容 ========== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 6rem 1rem 2rem;
         }
-        
+
+        /* 欢迎区域 */
         .welcome-header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -105,7 +200,34 @@
             opacity: 0.9;
             position: relative;
         }
-        
+
+        /* 作业提醒 */
+        .homework-alert {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+        }
+        .homework-alert h3 { margin: 0; color: #92400e; font-size: 1rem; }
+        .homework-alert p { margin: 0.25rem 0 0 0; color: #b45309; font-size: 0.875rem; }
+        .btn-go {
+            background: #b45309;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+
+        /* 卡片 */
         .section-card {
             background: var(--bg-card);
             border-radius: var(--radius-lg);
@@ -123,69 +245,8 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
-        .quick-menu {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem;
-        }
-        .menu-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem 1rem;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-md);
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: all 0.2s;
-            border: 2px solid transparent;
-            text-align: center;
-            position: relative;
-        }
-        .menu-item:hover {
-            background: white;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        .menu-item.primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-        }
-        .menu-item.warning {
-            background: linear-gradient(135deg, var(--warning), #d97706);
-            color: white;
-        }
-        .menu-item.success {
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: white;
-        }
-        .menu-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        .menu-label {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        .badge-count {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: var(--error);
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-        
+
+        /* 统计 */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -195,7 +256,7 @@
         .stat-item {
             padding: 1rem;
             background: var(--bg-secondary);
-            border-radius: var(--radius-md);
+            border-radius: 12px;
         }
         .stat-value {
             font-size: 1.5rem;
@@ -212,253 +273,162 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
-        .homework-alert {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 2px solid #f59e0b;
-            border-radius: var(--radius-lg);
+
+        /* 消息提示 */
+        .alert {
             padding: 1rem 1.5rem;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-md);
+            font-weight: 500;
         }
-        .homework-alert h3 {
-            margin: 0;
-            color: #92400e;
-            font-size: 1rem;
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
-        .homework-alert p {
-            margin: 0.25rem 0 0 0;
-            color: #b45309;
-            font-size: 0.875rem;
-        }
-        .btn-go {
-            background: #b45309;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.875rem;
-            white-space: nowrap;
-            margin-left: 1rem;
-        }
-        
-        .tool-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .tool-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-md);
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: all 0.2s;
-        }
-        .tool-item:hover {
-            background: white;
-            box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
-        }
-        .tool-icon {
-            font-size: 1.5rem;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .tool-content {
-            flex: 1;
-        }
-        .tool-label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-        .tool-desc {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-        
-        .nav-bottom {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            padding: 0.5rem;
-            display: flex;
-            justify-content: space-around;
-            z-index: 1000;
-        }
-        .nav-item {
-            text-align: center;
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            transition: all 0.2s;
-        }
-        .nav-item:hover, .nav-item.active {
-            color: var(--primary);
-            background: rgba(99, 102, 241, 0.1);
-        }
-        .nav-item-icon {
-            font-size: 1.25rem;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-        
-        @media (max-width: 640px) {
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
-            .quick-menu { grid-template-columns: repeat(2, 1fr); }
-            .navbar { padding: 0 1rem; }
-            .nav-links { gap: 1rem; font-size: 0.875rem; }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
+
+        /* 动画 */
+        .fade-in { animation: fadeIn 0.5s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay.open { display: block; }
+            .menu-toggle { display: flex; }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                padding-top: 4.5rem;
+            }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
-    <!-- 顶部导航 -->
-    <nav class="navbar">
-        <div class="logo">📚 VocabMaster</div>
-        <div class="nav-links">
-            {% if user.userprofile.is_teacher %}
-            <a href="{% url 'teacher_dashboard' %}" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; margin-right: 1rem; text-decoration: none;">👨‍🏫 返回教师后台</a>
+
+    <!-- 移动端菜单按钮 -->
+    <button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+
+    <!-- 移动端遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ========== 侧边栏 ========== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">📚 VocabMaster</div>
+
+        <div class="sidebar-section">导航</div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard' %}" class="sidebar-link active">
+                <span class="link-icon">🏠</span> 首页
+            </a>
+            <a href="{% url 'study' %}" class="sidebar-link">
+                <span class="link-icon">📖</span> 学习新词
+            </a>
+            <a href="{% url 'review' %}" class="sidebar-link">
+                <span class="link-icon">🔄</span> 复习单词
+                {% if due_count > 0 %}
+                <span class="link-badge">{{ due_count }}</span>
+                {% endif %}
+            </a>
+
+            <div class="sidebar-section">趣味学习</div>
+            <a href="{% url 'training' %}" class="sidebar-link">
+                <span class="link-icon">🎯</span> 强化训练
+            </a>
+            <a href="{% url 'snake_game' %}" class="sidebar-link">
+                <span class="link-icon">🐍</span> 贪吃蛇背词
+            </a>
+            <a href="{% url 'game_study' %}" class="sidebar-link">
+                <span class="link-icon">🎮</span> 游戏模式
+            </a>
+
+            <div class="sidebar-section">排行与数据</div>
+            <a href="{% url 'ranking' %}" class="sidebar-link">
+                <span class="link-icon">🏆</span> 班级排名
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'change_password' %}" class="sidebar-link">
+                <span class="link-icon">🔐</span> 修改密码
+            </a>
+            <a href="{% url 'logout' %}" class="sidebar-link">
+                <span class="link-icon">🚪</span> 退出登录
+            </a>
+        </div>
+    </aside>
+
+    <!-- ========== 主内容 ========== -->
+    <div class="main-content">
+        <div class="container">
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
             {% endif %}
-            <a href="{% url 'change_password' %}">改密码</a>
-            <a href="{% url 'logout' %}">退出</a>
-        </div>
-    </nav>
 
-    <div class="container">
-        
-        <!-- 欢迎区域 -->
-        <div class="welcome-header fade-in">
-            <h1>👋 你好，{{ user.userprofile.real_name|default:user.username }}！</h1>
-            <p>今天也是背单词的好日子，继续保持！</p>
-        </div>
-
-        <!-- 今日作业提醒（如果有） -->
-        {% if homework %}
-        <div class="homework-alert fade-in">
-            <div>
-                <h3>📋 今日作业：{{ homework.title }}</h3>
-                <p>截止：{{ homework.due_date|date:"m月d日" }} | 共 {{ homework.words.count }} 个单词</p>
+            <!-- 欢迎区域 -->
+            <div class="welcome-header fade-in">
+                <h1>👋 你好，{{ user.userprofile.real_name|default:user.username }}！</h1>
+                <p>今天也是背单词的好日子，继续保持！</p>
             </div>
-            <a href="{% url 'study' %}" class="btn-go">去做作业 →</a>
-        </div>
-        {% endif %}
 
-        <!-- 主要功能 -->
-        <div class="section-card fade-in">
-            <h2 class="section-title">🚀 开始学习</h2>
-            <div class="quick-menu">
-                <a href="{% url 'study' %}" class="menu-item primary">
-                    <div class="menu-icon">📖</div>
-                    <div class="menu-label">学习新词</div>
-                </a>
-                <a href="{% url 'review' %}" class="menu-item warning">
-                    <div class="menu-icon">🔄</div>
-                    <div class="menu-label">
-                        复习单词
-                        {% if due_count > 0 %}
-                        <span class="badge-count">{{ due_count }}</span>
-                        {% endif %}
+            <!-- 今日作业提醒 -->
+            {% if homework %}
+            <div class="homework-alert fade-in">
+                <div>
+                    <h3>📋 今日作业：{{ homework.title }}</h3>
+                    <p>截止：{{ homework.due_date|date:"m月d日" }} | 共 {{ homework.words.count }} 个单词</p>
+                </div>
+                <span class="btn-go" style="cursor: default;">请从侧栏进入学习</span>
+            </div>
+            {% endif %}
+
+            <!-- 学习统计 -->
+            <div class="section-card fade-in">
+                <h2 class="section-title">📊 我的数据</h2>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ learned_count|default:0 }}</div>
+                        <div class="stat-label">已掌握</div>
                     </div>
-                </a>
-                <a href="{% url 'ranking' %}" class="menu-item success">
-                    <div class="menu-icon">🏆</div>
-                    <div class="menu-label">班级排名</div>
-                </a>
-            </div>
-        </div>
-
-        <!-- 学习统计 -->
-        <div class="section-card fade-in">
-            <h2 class="section-title">📊 我的数据</h2>
-            <div class="stats-row">
-                <div class="stat-item">
-                    <div class="stat-value">{{ learned_count|default:0 }}</div>
-                    <div class="stat-label">已掌握</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value warning">{{ due_count|default:0 }}</div>
-                    <div class="stat-label">待复习</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value success">{{ my_rank|default:"-" }}</div>
-                    <div class="stat-label">班级排名</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">{{ user.userprofile.current_streak|default:0 }}</div>
-                    <div class="stat-label">连续天数</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 工具与设置 -->
-        <div class="section-card fade-in">
-            <h2 class="section-title">⚙️ 工具与设置</h2>
-            <div class="tool-grid">
-                <a href="{% url 'change_password' %}" class="tool-item">
-                    <div class="tool-icon">🔐</div>
-                    <div class="tool-content">
-                        <span class="tool-label">修改密码</span>
-                        <span class="tool-desc">修改登录密码</span>
+                    <div class="stat-item">
+                        <div class="stat-value warning">{{ due_count|default:0 }}</div>
+                        <div class="stat-label">待复习</div>
                     </div>
-                </a>
-                <a href="{% url 'logout' %}" class="tool-item">
-                    <div class="tool-icon">🚪</div>
-                    <div class="tool-content">
-                        <span class="tool-label">退出登录</span>
-                        <span class="tool-desc">安全退出系统</span>
+                    <div class="stat-item">
+                        <div class="stat-value success">{{ my_rank|default:"-" }}</div>
+                        <div class="stat-label">班级排名</div>
                     </div>
-                </a>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ user.userprofile.current_streak|default:0 }}</div>
+                        <div class="stat-label">连续天数</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
+        </div>
     </div>
 
-    <!-- 底部导航栏 -->
-    <div class="nav-bottom">
-        <a href="{% url 'dashboard' %}" class="nav-item active">
-            <span class="nav-item-icon">🏠</span>
-            <span>首页</span>
-        </a>
-        <a href="{% url 'study' %}" class="nav-item">
-            <span class="nav-item-icon">📖</span>
-            <span>学习</span>
-        </a>
-        <a href="{% url 'review' %}" class="nav-item">
-            <span class="nav-item-icon">🔄</span>
-            <span>复习</span>
-        </a>
-        <a href="{% url 'ranking' %}" class="nav-item">
-            <span class="nav-item-icon">🏆</span>
-            <span>排名</span>
-        </a>
-    </div>
+    <script>
+        const toggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
 
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    </script>
 </body>
 </html>

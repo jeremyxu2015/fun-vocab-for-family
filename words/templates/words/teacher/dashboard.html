@@ -1,127 +1,185 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <link rel="icon" href="/static/words/images/favicon.ico?v=2" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>教师控制台 - VocabMaster</title>
     <style>
-        :root { --primary: #6366f1; --secondary: #8b5cf6; --success: #10b981; --warning: #f59e0b; --error: #ef4444; --info: #3b82f6; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; margin: 0; padding-bottom: 2rem; }
-        .teacher-header { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .teacher-header h1 { margin: 0; font-size: 2rem; font-weight: 800; }
-        .top-nav { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; margin: -2rem -2rem 2rem -2rem; border-bottom: 1px solid rgba(255,255,255,0.2); }
-        .nav-links a { color: white; text-decoration: none; margin-left: 2rem; font-weight: 500; opacity: 0.9; transition: opacity 0.2s; }
-        .nav-links a:hover { opacity: 1; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
-        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
-        .card { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
-        .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-        .menu-item { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: #f1f5f9; border-radius: 12px; text-decoration: none; color: #1e293b; transition: all 0.2s; border: 2px solid transparent; }
-        .menu-item:hover { background: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .menu-icon { font-size: 1.5rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .menu-content { flex: 1; }
-        .menu-label { font-weight: 600; display: block; margin-bottom: 0.25rem; }
-        .menu-desc { font-size: 0.875rem; color: #64748b; }
-        .menu-arrow { color: #64748b; font-size: 1.25rem; }
-        .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 1rem; }
-        .action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem 1rem; background: white; border: 2px solid #f1f5f9; border-radius: 12px; text-decoration: none; color: #1e293b; transition: all 0.2s; text-align: center; }
-        .action-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
-        .action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; }
-        .action-btn.success { background: linear-gradient(135deg, var(--success), #059669); color: white; border: none; }
-        .action-btn.warning { background: linear-gradient(135deg, var(--warning), #d97706); color: white; border: none; }
-        .action-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-        @media (max-width: 768px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } }
-        .stat-box { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; border-left: 4px solid var(--primary); }
-        .stat-box.success { border-left-color: var(--success); } .stat-box.warning { border-left-color: var(--warning); } .stat-box.info { border-left-color: var(--info); }
-        .stat-number { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 0.5rem; }
-        .stat-box.success .stat-number { color: var(--success); } .stat-box.warning .stat-number { color: var(--warning); } .stat-box.info .stat-number { color: var(--info); }
-        .stat-label { color: #64748b; font-size: 0.875rem; }
-        .section-divider { margin: 1.5rem 0; text-align: center; position: relative; }
-        .section-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #f1f5f9; }
-        .section-divider span { background: white; padding: 0 1rem; color: #64748b; font-size: 0.875rem; position: relative; }
-        .alert { padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 500; }
-        .alert-success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; min-height: 100vh; display: flex; }
+
+        .sidebar {
+            width: 220px; min-width: 220px;
+            background: linear-gradient(180deg, #4f46e5 0%, #6366f1 100%);
+            color: white; display: flex; flex-direction: column;
+            min-height: 100vh; position: sticky; top: 0; height: 100vh;
+        }
+        .sidebar-logo { padding: 1.5rem 1.25rem; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
+        .sidebar-nav { flex: 1; padding: 1rem 0; }
+        .sidebar-nav a {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.7rem 1.25rem; color: rgba(255,255,255,0.8);
+            text-decoration: none; font-size: 0.9rem; transition: all 0.15s;
+        }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar-nav a.active { background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-left: 3px solid white; }
+        .sidebar-nav .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.75rem 1.25rem; }
+        .sidebar-bottom { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.15); }
+        .sidebar-bottom a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0; }
+        .sidebar-bottom a:hover { color: white; }
+
+        .main { flex: 1; min-width: 0; }
+        .top-bar {
+            background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 10;
+        }
+        .top-bar h1 { font-size: 1.3rem; color: #1e293b; }
+        .container { padding: 1.5rem 2rem; }
+
+        .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: white; padding: 1.5rem; border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-align: center;
+            border-top: 3px solid #6366f1;
+        }
+        .stat-card.s { border-top-color: #10b981; }
+        .stat-card.w { border-top-color: #f59e0b; }
+        .stat-card.i { border-top-color: #3b82f6; }
+        .stat-card .num { font-size: 2rem; font-weight: 800; color: #1e293b; }
+        .stat-card .lbl { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        .card { background: white; border-radius: 14px; padding: 1.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .card-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; color: #1e293b;
+            display: flex; align-items: center; gap: 0.5rem;
+            padding-bottom: 0.75rem; border-bottom: 2px solid #f1f5f9;
+        }
+        .menu-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 1rem; background: #f8fafc; border-radius: 10px;
+            text-decoration: none; color: #1e293b; transition: all 0.15s;
+            border: 2px solid transparent; margin-bottom: 0.75rem;
+        }
+        .menu-item:hover { background: white; border-color: #6366f1; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .menu-icon { font-size: 1.3rem; width: 36px; text-align: center; }
+        .menu-label { font-weight: 600; display: block; }
+        .menu-desc { font-size: 0.8rem; color: #64748b; }
+        .menu-arrow { margin-left: auto; color: #cbd5e1; }
+
+        .alert { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
+        .alert-success { background: #d1fae5; color: #065f46; }
+
+        @media (max-width: 900px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <div class="teacher-header">
-        <div class="top-nav">
-            <div style="font-weight: 700; font-size: 1.25rem;">📚 VocabMaster 教师版</div>
-            <div class="nav-links">
-                <a href="{% url 'dashboard' %}">学生视图</a>
-                <a href="{% url 'logout' %}">退出登录</a>
-            </div>
+    <aside class="sidebar">
+        <div class="sidebar-logo">📚 VocabMaster</div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="active">🏠 控制台</a>
+            <a href="{% url 'student_management' %}">👨‍🎓 学生管理</a>
+            <a href="{% url 'import_students' %}">⬆️ 导入学生</a>
+            <div class="divider"></div>
+            <a href="{% url 'word_management' %}">📖 单词管理</a>
+            <a href="{% url 'add_word' %}">➕ 添加单词</a>
+            <a href="{% url 'bulk_add_words' %}">📦 批量添加</a>
+            <div class="divider"></div>
+            <a href="{% url 'homework_management' %}">✏️ 作业管理</a>
+            <a href="{% url 'create_homework' %}">📝 布置作业</a>
+            <div class="divider"></div>
+            <a href="{% url 'generate_code' %}">🔑 注册码</a>
+            <a href="{% url 'class_management' %}">🏫 班级管理</a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="{% url 'teacher_change_password' %}">🔐 修改密码</a>
+            <a href="{% url 'logout' %}">🚪 退出登录</a>
         </div>
-        <h1>👨‍🏫 教师控制台</h1>
-        <p>欢迎回来，{{ request.user.first_name|default:request.user.username }}老师</p>
-    </div>
+    </aside>
 
-    <div class="container">
-        {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
-        
-        <div class="stats-bar fade-in">
-            <div class="stat-box"><div class="stat-number">{{ total_students|default:0 }}</div><div class="stat-label">班级学生</div></div>
-            <div class="stat-box success"><div class="stat-number">{{ total_words|default:0 }}</div><div class="stat-label">单词总数</div></div>
-            <div class="stat-box warning"><div class="stat-number">{{ total_learned|default:0 }}</div><div class="stat-label">累计学习</div></div>
-            <div class="stat-box info"><div class="stat-number">{{ active_homework|default:0 }}</div><div class="stat-label">进行中作业</div></div>
-        </div>
-
-        <div class="grid-2">
-            <div class="card fade-in">
-                <h2 class="card-title">👨‍🎓 学生管理</h2>
-                <div class="menu-grid">
-                    <a href="{% url 'student_management' %}" class="menu-item"><div class="menu-icon">📋</div><div class="menu-content"><span class="menu-label">学生列表</span><span class="menu-desc">查看/管理所有学生</span></div><span class="menu-arrow">→</span></a>
-                    <a href="{% url 'import_students' %}" class="menu-item"><div class="menu-icon">⬆️</div><div class="menu-content"><span class="menu-label">批量导入</span><span class="menu-desc">Excel/文本导入学生</span></div><span class="menu-arrow">→</span></a>
-                </div>
-                <div class="section-divider"><span>快捷操作</span></div>
-                <div class="quick-actions">
-                    <a href="{% url 'student_management' %}" class="action-btn"><span class="action-icon">👀</span><span class="action-label">查看学生</span></a>
-                    <a href="{% url 'import_students' %}" class="action-btn success"><span class="action-icon">➕</span><span class="action-label">导入新生</span></a>
-                </div>
-            </div>
-
-            <div class="card fade-in">
-                <h2 class="card-title">📖 单词库管理</h2>
-                <div class="menu-grid">
-                    <a href="{% url 'word_management' %}" class="menu-item"><div class="menu-icon">📚</div><div class="menu-content"><span class="menu-label">单词列表</span><span class="menu-desc">查看/编辑所有单词</span></div><span class="menu-arrow">→</span></a>
-                    <a href="{% url 'add_word' %}" class="menu-item"><div class="menu-icon">➕</div><div class="menu-content"><span class="menu-label">添加单词</span><span class="menu-desc">录入新单词到词库</span></div><span class="menu-arrow">→</span></a>
-                </div>
-                <div class="section-divider"><span>快捷操作</span></div>
-                <div class="quick-actions">
-                    <a href="{% url 'word_management' %}" class="action-btn"><span class="action-icon">🔍</span><span class="action-label">浏览词库</span></a>
-                    <a href="{% url 'add_word' %}" class="action-btn primary"><span class="action-icon">✏️</span><span class="action-label">新增单词</span></a>
-                </div>
-            </div>
-
-            <div class="card fade-in">
-                <h2 class="card-title">✏️ 作业管理</h2>
-                <div class="menu-grid">
-                    <a href="{% url 'homework_management' %}" class="menu-item"><div class="menu-icon">📋</div><div class="menu-content"><span class="menu-label">作业列表</span><span class="menu-desc">查看/管理历史作业</span></div><span class="menu-arrow">→</span></a>
-                    <a href="{% url 'create_homework' %}" class="menu-item"><div class="menu-icon">📝</div><div class="menu-content"><span class="menu-label">布置作业</span><span class="menu-desc">创建新作业给学生</span></div><span class="menu-arrow">→</span></a>
-                </div>
-                <div class="section-divider"><span>快捷操作</span></div>
-                <div class="quick-actions">
-                    <a href="{% url 'homework_management' %}" class="action-btn"><span class="action-icon">📊</span><span class="action-label">查看作业</span></a>
-                    <a href="{% url 'create_homework' %}" class="action-btn warning"><span class="action-icon">🎯</span><span class="action-label">布置新作业</span></a>
-                </div>
-            </div>
-
-            <div class="card fade-in">
-                <h2 class="card-title">⚙️ 系统与设置</h2>
-                <div class="menu-grid">
-                    <a href="{% url 'teacher_change_password' %}" class="menu-item"><div class="menu-icon">🔐</div><div class="menu-content"><span class="menu-label">修改密码</span><span class="menu-desc">更改教师账号密码</span></div><span class="menu-arrow">→</span></a>
-                    <a href="{% url 'dashboard' %}" class="menu-item"><div class="menu-icon">👤</div><div class="menu-content"><span class="menu-label">学生视图</span><span class="menu-desc">切换到学生界面</span></div><span class="menu-arrow">→</span></a>
-                    <a href="{% url 'logout' %}" class="menu-item" style="border-color: rgba(239, 68, 68, 0.2);"><div class="menu-icon">🚪</div><div class="menu-content"><span class="menu-label" style="color: var(--error);">退出登录</span><span class="menu-desc">安全退出系统</span></div><span class="menu-arrow" style="color: var(--error);">→</span></a>
-                </div>
-            </div>
+    <div class="main">
+        <div class="top-bar">
+            <h1>🏠 教师控制台</h1>
+            <span style="color: #64748b; font-size: 0.9rem;">欢迎，{{ request.user.first_name|default:request.user.username }} 老师</span>
         </div>
 
-        <div style="text-align: center; margin-top: 3rem; color: #64748b; font-size: 0.875rem;">
-            <p>💡 提示：点击上方任意卡片即可进入对应功能</p>
-            <p>系统版本：VocabMaster School Edition v1.0</p>
+        <div class="container">
+            {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+
+            <div class="stats-bar">
+                <div class="stat-card"><div class="num">{{ total_students|default:0 }}</div><div class="lbl">班级学生</div></div>
+                <div class="stat-card s"><div class="num">{{ total_words|default:0 }}</div><div class="lbl">单词总数</div></div>
+                <div class="stat-card w"><div class="num">{{ total_learned|default:0 }}</div><div class="lbl">累计学习</div></div>
+                <div class="stat-card i"><div class="num">{{ active_homework|default:0 }}</div><div class="lbl">进行中作业</div></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h2 class="card-title">👨‍🎓 学生管理</h2>
+                    <a href="{% url 'student_management' %}" class="menu-item">
+                        <span class="menu-icon">📋</span>
+                        <div><span class="menu-label">学生列表</span><span class="menu-desc">查看/管理所有学生</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                    <a href="{% url 'import_students' %}" class="menu-item">
+                        <span class="menu-icon">⬆️</span>
+                        <div><span class="menu-label">批量导入</span><span class="menu-desc">Excel/文本导入学生</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">📖 单词库管理</h2>
+                    <a href="{% url 'word_management' %}" class="menu-item">
+                        <span class="menu-icon">📚</span>
+                        <div><span class="menu-label">单词列表</span><span class="menu-desc">查看/编辑所有单词</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                    <a href="{% url 'add_word' %}" class="menu-item">
+                        <span class="menu-icon">➕</span>
+                        <div><span class="menu-label">添加单词</span><span class="menu-desc">录入新单词到词库</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">✏️ 作业管理</h2>
+                    <a href="{% url 'homework_management' %}" class="menu-item">
+                        <span class="menu-icon">📋</span>
+                        <div><span class="menu-label">作业列表</span><span class="menu-desc">查看/管理历史作业</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                    <a href="{% url 'create_homework' %}" class="menu-item">
+                        <span class="menu-icon">📝</span>
+                        <div><span class="menu-label">布置作业</span><span class="menu-desc">创建新作业给学生</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">⚙️ 系统设置</h2>
+                    <a href="{% url 'generate_code' %}" class="menu-item">
+                        <span class="menu-icon">🔑</span>
+                        <div><span class="menu-label">注册码</span><span class="menu-desc">生成/管理学生注册码</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                    <a href="{% url 'class_management' %}" class="menu-item">
+                        <span class="menu-icon">🏫</span>
+                        <div><span class="menu-label">班级管理</span><span class="menu-desc">管理班级信息</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                    <a href="{% url 'teacher_change_password' %}" class="menu-item">
+                        <span class="menu-icon">🔐</span>
+                        <div><span class="menu-label">修改密码</span><span class="menu-desc">更改教师账号密码</span></div>
+                        <span class="menu-arrow">→</span>
+                    </a>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2.5rem; color: #94a3b8; font-size: 0.8rem;">
+                VocabMaster School Edition v2.0
+            </div>
         </div>
     </div>
 </body>

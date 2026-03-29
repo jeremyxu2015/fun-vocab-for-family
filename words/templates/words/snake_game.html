@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <link rel="icon" href="/static/words/images/favicon.ico?v=2" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 贪吃蛇背单词</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f172a; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            color: white; overflow: hidden;
+        }
+
+        .word-bar {
+            width: 100%; padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            text-align: center; border-bottom: 2px solid #6366f1;
+        }
+        .word-bar .hint { font-size: 0.75rem; color: #94a3b8; }
+        .word-bar .word { font-size: 2.2rem; font-weight: 800; color: #a5f3fc; letter-spacing: 0.05em; }
+        .word-bar .pron { font-size: 0.9rem; color: #64748b; }
+
+        .hud {
+            width: 100%; padding: 0.4rem 2rem;
+            display: flex; justify-content: center; gap: 3rem;
+            background: #1e293b;
+        }
+        .hud-item { text-align: center; }
+        .hud-item .val { font-size: 1.3rem; font-weight: 800; }
+        .hud-item .lbl { font-size: 0.65rem; color: #64748b; }
+        .hud-item.lives .val { color: #f87171; }
+        .hud-item.score .val { color: #fbbf24; }
+        .hud-item.words .val { color: #34d399; }
+
+        .canvas-wrap {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 0.25rem; width: 100%;
+        }
+        #gameCanvas { border: 3px solid #ef4444; border-radius: 6px; display: block; }
+
+        .controls {
+            padding: 0.5rem; text-align: center; color: #475569; font-size: 0.75rem;
+            background: #1e293b; width: 100%;
+        }
+        .controls a { color: #6366f1; text-decoration: none; margin-left: 1.5rem; }
+
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7); z-index: 100;
+            justify-content: center; align-items: center;
+        }
+        .overlay.show { display: flex; }
+        .popup {
+            background: #1e293b; border-radius: 16px; padding: 2.5rem;
+            text-align: center; max-width: 420px; width: 90%;
+            border: 2px solid #6366f1;
+        }
+        .popup h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .popup p { color: #94a3b8; margin-bottom: 1.5rem; }
+        .popup button, .popup a.btn {
+            display: inline-block; padding: 0.75rem 2rem; background: #6366f1; color: white;
+            border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600;
+            text-decoration: none; margin: 0.25rem;
+        }
+        .popup button:hover, .popup a.btn:hover { background: #4f46e5; }
+        .popup button.secondary { background: #334155; }
+        .popup button.secondary:hover { background: #475569; }
+
+        /* 墙壁闪红 */
+        @keyframes wall-flash { 0%{border-color:#ef4444} 50%{border-color:#fbbf24} 100%{border-color:#ef4444} }
+        #gameCanvas.wall-hit { animation: wall-flash 0.3s; }
+
+        @keyframes flash-green { 0%,100%{background:#0f172a} 50%{background:rgba(16,185,129,0.15)} }
+        @keyframes flash-red { 0%,100%{background:#0f172a} 50%{background:rgba(239,68,68,0.15)} }
+        body.flash-correct { animation: flash-green 0.4s; }
+        body.flash-wrong { animation: flash-red 0.4s; }
+
+        /* 联机模式 UI */
+        .mp-bar {
+            display: none; width: 100%; padding: 0.4rem 1rem;
+            background: #162032; text-align: center; font-size: 0.8rem; color: #94a3b8;
+        }
+        .mp-bar.show { display: flex; justify-content: space-around; }
+        .mp-bar .player { display: flex; align-items: center; gap: 0.5rem; }
+        .mp-bar .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .mp-bar .dot.me { background: #34d399; }
+        .mp-bar .dot.them { background: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="word-bar">
+        <div class="hint">🐍 吃掉正确的中文释义！撞墙扣命！</div>
+        <div class="word" id="currentWord">加载中...</div>
+        <div class="pron" id="currentPron"></div>
+    </div>
+
+    <div class="hud">
+        <div class="hud-item lives"><div class="val" id="livesVal">3</div><div class="lbl">❤️ 生命</div></div>
+        <div class="hud-item score"><div class="val" id="scoreVal">0</div><div class="lbl">⭐ 得分</div></div>
+        <div class="hud-item words"><div class="val" id="wordsVal">0</div><div class="lbl">📚 单词</div></div>
+    </div>
+
+    <!-- 联机状态栏 -->
+    <div class="mp-bar" id="mpBar">
+        <div class="player"><span class="dot me"></span> 我: <strong id="myMpScore">0</strong></div>
+        <div id="mpStatus">等待对手...</div>
+        <div class="player"><span class="dot them"></span> 对手: <strong id="theirMpScore">0</strong></div>
+    </div>
+
+    <div class="canvas-wrap">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+        ⬆️⬇️⬅️➡️ 方向键 &nbsp;|&nbsp; 🧱 撞墙 -1❤️ &nbsp;|&nbsp; ✅ 吃对 +1❤️ &nbsp;|&nbsp; ❌ 吃错 -1❤️
+        <a href="{% url 'dashboard' %}">← 返回首页</a>
+    </div>
+
+    <!-- 模式选择弹窗 -->
+    <div class="overlay show" id="modeOverlay">
+        <div class="popup">
+            <h2>🐍 贪吃蛇背单词</h2>
+            <p>选择游戏模式</p>
+            <button onclick="startSingle()">🎮 单人模式</button>
+            <button class="secondary" onclick="showMultiplayer()">👥 联机对战</button>
+        </div>
+    </div>
+
+    <!-- 联机房间弹窗 -->
+    <div class="overlay" id="roomOverlay">
+        <div class="popup">
+            <h2>👥 联机对战</h2>
+            <p>创建房间或输入房间号加入</p>
+            <button onclick="createRoom()">🏠 创建房间</button>
+            <div style="margin: 1rem 0; color: #64748b;">— 或 —</div>
+            <input type="text" id="roomCodeInput" placeholder="输入4位房间号" maxlength="4"
+                style="padding:0.75rem;border:2px solid #475569;border-radius:8px;background:#0f172a;color:white;font-size:1.2rem;text-align:center;width:160px;letter-spacing:0.3em;">
+            <br>
+            <button style="margin-top:0.75rem;" onclick="joinRoom()">🚀 加入房间</button>
+            <br>
+            <button class="secondary" style="margin-top:0.5rem;" onclick="backToMode()">← 返回</button>
+        </div>
+    </div>
+
+    <!-- 等待对手弹窗 -->
+    <div class="overlay" id="waitOverlay">
+        <div class="popup">
+            <h2>⏳ 等待对手</h2>
+            <p>房间号: <strong id="roomCodeDisplay" style="font-size:1.5rem;color:#a5f3fc;letter-spacing:0.2em;">----</strong></p>
+            <p>把房间号告诉你的对手！</p>
+            <button class="secondary" onclick="leaveRoom()">取消</button>
+        </div>
+    </div>
+
+    <!-- 游戏结束弹窗 -->
+    <div class="overlay" id="gameOverOverlay">
+        <div class="popup">
+            <h2>💀 游戏结束</h2>
+            <p id="gameOverMsg">得分: 0 | 答对: 0 个单词</p>
+            <button onclick="location.reload()">再来一局</button>
+            <a href="{% url 'dashboard' %}" class="btn secondary" style="background:#334155;">返回首页</a>
+        </div>
+    </div>
+
+    <div class="overlay" id="clearOverlay">
+        <div class="popup">
+            <h2>🎉 恭喜通关！</h2>
+            <p id="clearMsg">你已学完所有单词！</p>
+            <button onclick="location.href='{% url 'dashboard' %}'">返回首页</button>
+        </div>
+    </div>
+
+    <!-- 联机结算弹窗 -->
+    <div class="overlay" id="mpResultOverlay">
+        <div class="popup">
+            <h2 id="mpResultTitle">🏆 对战结果</h2>
+            <p id="mpResultMsg"></p>
+            <button onclick="location.reload()">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // roundRect polyfill
+        if(!CanvasRenderingContext2D.prototype.roundRect){
+            CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+                if(typeof r==='number') r=[r,r,r,r];
+                this.moveTo(x+r[0],y);this.arcTo(x+w,y,x+w,y+h,r[1]);this.arcTo(x+w,y+h,x,y+h,r[2]);this.arcTo(x,y+h,x,y,r[3]);this.arcTo(x,y,x+w,y,r[0]);this.closePath();
+            };
+        }
+
+        function getCookie(n){let v=null;if(document.cookie){document.cookie.split(';').forEach(c=>{c=c.trim();if(c.startsWith(n+'='))v=decodeURIComponent(c.substring(n.length+1))})}return v}
+        const csrf = getCookie('csrftoken');
+
+        // ——— 常量 ———
+        const CELL = 20;
+        const PELLET = 2;
+        const PELLET_PX = CELL * PELLET;
+        const SPEED = 110;
+        const NUM_PELLETS = 4;
+
+        // ——— 画布：尽量大 ———
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function sizeCanvas(){
+            const wrap = document.querySelector('.canvas-wrap');
+            // 尽量填满，不限 800x600
+            const w = Math.floor(wrap.clientWidth / CELL) * CELL;
+            const h = Math.floor(wrap.clientHeight / CELL) * CELL;
+            canvas.width = Math.max(w - CELL, 400);
+            canvas.height = Math.max(h - CELL, 300);
+        }
+        sizeCanvas();
+        window.addEventListener('resize', () => { sizeCanvas(); if(gameTimer) draw(); });
+
+        const COLS = () => Math.floor(canvas.width / CELL);
+        const ROWS = () => Math.floor(canvas.height / CELL);
+
+        // ——— 游戏状态 ———
+        let snake, dir, nextDir, score, lives, wordsCount, currentWord, pellets, gameTimer, paused;
+        let isMultiplayer = false, roomCode = null, mpPollTimer = null;
+
+        function initState(){
+            const cx = Math.floor(COLS()/2), cy = Math.floor(ROWS()/2);
+            snake = [{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+            dir = {x:1,y:0}; nextDir = {x:1,y:0};
+            score = 0; lives = 3; wordsCount = 0;
+            currentWord = null; pellets = []; paused = false;
+            updateHUD();
+        }
+
+        function updateHUD(){
+            document.getElementById('livesVal').textContent = lives;
+            document.getElementById('scoreVal').textContent = score;
+            document.getElementById('wordsVal').textContent = wordsCount;
+            if(isMultiplayer) document.getElementById('myMpScore').textContent = score;
+        }
+
+        // ——— 模式选择 ———
+        window.startSingle = function(){
+            isMultiplayer = false;
+            document.getElementById('modeOverlay').classList.remove('show');
+            startGame();
+        };
+        window.showMultiplayer = function(){
+            document.getElementById('modeOverlay').classList.remove('show');
+            document.getElementById('roomOverlay').classList.add('show');
+        };
+        window.backToMode = function(){
+            document.getElementById('roomOverlay').classList.remove('show');
+            document.getElementById('modeOverlay').classList.add('show');
+        };
+
+        // ——— 联机：创建/加入房间 ———
+        window.createRoom = async function(){
+            try {
+                const r = await fetch('/snake/mp/create/', {method:'POST', credentials:'same-origin', headers:{'X-CSRFToken':csrf}});
+                const d = await r.json();
+                roomCode = d.room_code;
+                document.getElementById('roomCodeDisplay').textContent = roomCode;
+                document.getElementById('roomOverlay').classList.remove('show');
+                document.getElementById('waitOverlay').classList.add('show');
+                pollForOpponent();
+            } catch(e){ alert('创建房间失败'); }
+        };
+
+        window.joinRoom = async function(){
+            const code = document.getElementById('roomCodeInput').value.trim();
+            if(code.length !== 4){ alert('请输入4位房间号'); return; }
+            try {
+                const r = await fetch('/snake/mp/join/', {method:'POST', credentials:'same-origin',
+                    headers:{'X-CSRFToken':csrf, 'Content-Type':'application/x-www-form-urlencoded'},
+                    body:'room_code='+code});
+                const d = await r.json();
+                if(d.error){ alert(d.error); return; }
+                roomCode = code;
+                document.getElementById('roomOverlay').classList.remove('show');
+                isMultiplayer = true;
+                document.getElementById('mpBar').classList.add('show');
+                document.getElementById('mpStatus').textContent = '对战中!';
+                startGame();
+            } catch(e){ alert('加入房间失败'); }
+        };
+
+        window.leaveRoom = function(){
+            if(roomCode) fetch('/snake/mp/leave/', {method:'POST', credentials:'same-origin',
+                headers:{'X-CSRFToken':csrf,'Content-Type':'application/x-www-form-urlencoded'},
+                body:'room_code='+roomCode});
+            roomCode = null;
+            clearInterval(mpPollTimer);
+            document.getElementById('waitOverlay').classList.remove('show');
+            document.getElementById('modeOverlay').classList.add('show');
+        };
+
+        function pollForOpponent(){
+            mpPollTimer = setInterval(async ()=>{
+                try {
+                    const r = await fetch(`/snake/mp/status/?room_code=${roomCode}`, {credentials:'same-origin'});
+                    const d = await r.json();
+                    if(d.started){
+                        clearInterval(mpPollTimer);
+                        document.getElementById('waitOverlay').classList.remove('show');
+                        isMultiplayer = true;
+                        document.getElementById('mpBar').classList.add('show');
+                        document.getElementById('mpStatus').textContent = '对战中!';
+                        startGame();
+                    }
+                } catch(e){}
+            }, 1000);
+        }
+
+        // 联机：同步分数
+        async function mpSyncScore(){
+            if(!isMultiplayer || !roomCode) return;
+            try {
+                const r = await fetch('/snake/mp/sync/', {method:'POST', credentials:'same-origin',
+                    headers:{'X-CSRFToken':csrf,'Content-Type':'application/x-www-form-urlencoded'},
+                    body:`room_code=${roomCode}&score=${score}&words=${wordsCount}&lives=${lives}`});
+                const d = await r.json();
+                document.getElementById('theirMpScore').textContent = d.opponent_score || 0;
+                if(d.opponent_lives !== undefined && d.opponent_lives <= 0){
+                    // 对手死了，我赢了
+                    showMpResult(true);
+                }
+            } catch(e){}
+        }
+
+        function showMpResult(iWin){
+            clearInterval(gameTimer);
+            clearInterval(mpSyncTimer);
+            const title = document.getElementById('mpResultTitle');
+            const msg = document.getElementById('mpResultMsg');
+            title.textContent = iWin ? '🏆 你赢了！' : '💀 你输了';
+            msg.textContent = `我的得分: ${score} | 答对: ${wordsCount} 个单词`;
+            document.getElementById('mpResultOverlay').classList.add('show');
+        }
+
+        let mpSyncTimer = null;
+
+        // ——— 单词 API ———
+        async function loadWord(){
+            try {
+                const r = await fetch('/game/challenge/', {credentials:'same-origin', headers:{'X-CSRFToken':csrf}});
+                const d = await r.json();
+                if(d.game_clear){
+                    clearInterval(gameTimer);
+                    document.getElementById('clearMsg').textContent = d.message;
+                    document.getElementById('clearOverlay').classList.add('show');
+                    return false;
+                }
+                currentWord = d;
+                document.getElementById('currentWord').textContent = d.word;
+                document.getElementById('currentPron').textContent = d.pronunciation || '';
+                return true;
+            } catch(e){ console.error(e); return false; }
+        }
+
+        async function reportAnswer(correct){
+            if(!currentWord) return;
+            const fd = new FormData();
+            fd.append('word_id', currentWord.word_id);
+            fd.append('user_input', correct ? currentWord.definition : '');
+            fd.append('mode', currentWord.mode);
+            fd.append('is_correct', correct ? 'true' : 'false');
+            try { await fetch('/snake/answer/', {method:'POST', body:fd, credentials:'same-origin', headers:{'X-CSRFToken':csrf}}); } catch(e){}
+        }
+
+        // ——— 豆子 ———
+        let wordBank = [];
+        async function fetchWordBank(){
+            try {
+                const r = await fetch('/snake/word-bank/', {credentials:'same-origin', headers:{'X-CSRFToken':csrf}});
+                const d = await r.json();
+                wordBank = d.definitions || [];
+            } catch(e){}
+        }
+
+        function getWrongDefs(correctDef, count){
+            const pool = wordBank.filter(d => d !== correctDef);
+            for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]; }
+            const result = pool.slice(0, count);
+            while(result.length < count) result.push('???');
+            return result;
+        }
+
+        function shortDef(def){
+            let s = def.replace(/^[a-zA-Z]+\.\s*/,'').split(/[；;，,、]/)[0].trim();
+            if(s.length > 5) s = s.substring(0,5);
+            return s;
+        }
+
+        function placePellets(){
+            pellets = [];
+            if(!currentWord) return;
+            const correctDef = currentWord.definition;
+            const wrongDefs = getWrongDefs(correctDef, NUM_PELLETS - 1);
+            const allDefs = [
+                {text: shortDef(correctDef), correct: true, fullDef: correctDef},
+                ...wrongDefs.map(d => ({text: shortDef(d), correct: false, fullDef: d}))
+            ];
+            for(let i=allDefs.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[allDefs[i],allDefs[j]]=[allDefs[j],allDefs[i]]; }
+            const cols = COLS(), rows = ROWS();
+            const occupied = new Set();
+            snake.forEach(s => occupied.add(`${s.x},${s.y}`));
+            for(const def of allDefs){
+                let tries = 0, px, py;
+                do {
+                    px = Math.floor(Math.random() * (cols - PELLET));
+                    py = Math.floor(Math.random() * (rows - PELLET));
+                    tries++;
+                } while(tries < 200 && isOverlap(px, py, occupied));
+                for(let dx=0;dx<PELLET;dx++) for(let dy=0;dy<PELLET;dy++) occupied.add(`${px+dx},${py+dy}`);
+                pellets.push({x: px, y: py, ...def});
+            }
+        }
+
+        function isOverlap(px, py, occupied){
+            for(let dx=0;dx<PELLET;dx++) for(let dy=0;dy<PELLET;dy++){
+                if(occupied.has(`${px+dx},${py+dy}`)) return true;
+            }
+            for(const p of pellets){ if(Math.abs(px-p.x)<3 && Math.abs(py-p.y)<3) return true; }
+            return false;
+        }
+
+        function headHitsPellet(hx, hy){
+            for(let i=0;i<pellets.length;i++){
+                const p = pellets[i];
+                if(hx >= p.x && hx < p.x+PELLET && hy >= p.y && hy < p.y+PELLET) return i;
+            }
+            return -1;
+        }
+
+        // ——— 主循环 ———
+        function tick(){
+            if(paused) return;
+            dir = {...nextDir};
+            const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+            const cols = COLS(), rows = ROWS();
+
+            // 撞墙！减命
+            if(head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows){
+                lives--;
+                updateHUD();
+                flashBody('wrong');
+                canvas.classList.add('wall-hit');
+                setTimeout(()=>canvas.classList.remove('wall-hit'), 300);
+                if(lives <= 0){ gameOver(); return; }
+                resetSnake();
+                return;
+            }
+
+            // 撞自己
+            if(snake.some(s => s.x===head.x && s.y===head.y)){
+                lives--;
+                updateHUD();
+                flashBody('wrong');
+                if(lives <= 0){ gameOver(); return; }
+                resetSnake();
+                return;
+            }
+
+            snake.unshift(head);
+
+            const pi = headHitsPellet(head.x, head.y);
+            if(pi >= 0){
+                const pellet = pellets[pi];
+                if(pellet.correct){
+                    score += 10;
+                    lives++;
+                    wordsCount++;
+                    flashBody('correct');
+                    reportAnswer(true);
+                    updateHUD();
+                    if(isMultiplayer) mpSyncScore();
+                    loadWord().then(ok => { if(ok) placePellets(); });
+                } else {
+                    lives--;
+                    flashBody('wrong');
+                    reportAnswer(false);
+                    updateHUD();
+                    if(isMultiplayer) mpSyncScore();
+                    if(lives <= 0){ gameOver(); return; }
+                    pellets.splice(pi, 1);
+                    snake.pop();
+                }
+            } else {
+                snake.pop();
+            }
+            draw();
+        }
+
+        function resetSnake(){
+            const cx = Math.floor(COLS()/2), cy = Math.floor(ROWS()/2);
+            snake = [{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+            dir = {x:1,y:0}; nextDir = {x:1,y:0};
+        }
+
+        function flashBody(type){
+            document.body.classList.remove('flash-correct','flash-wrong');
+            void document.body.offsetWidth;
+            document.body.classList.add(type==='correct'?'flash-correct':'flash-wrong');
+        }
+
+        function gameOver(){
+            clearInterval(gameTimer);
+            if(isMultiplayer){
+                mpSyncScore();
+                showMpResult(false);
+            } else {
+                document.getElementById('gameOverMsg').textContent = `得分: ${score} | 答对: ${wordsCount} 个单词`;
+                document.getElementById('gameOverOverlay').classList.add('show');
+            }
+        }
+
+        // ——— 绘制 ———
+        function draw(){
+            const w = canvas.width, h = canvas.height;
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+
+            // 墙壁边界（红色警示线）
+            ctx.strokeStyle = '#991b1b';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(1, 1, w-2, h-2);
+
+            // 淡网格
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 0.5;
+            for(let x=0;x<=w;x+=CELL){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke(); }
+            for(let y=0;y<=h;y+=CELL){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke(); }
+
+            // 豆子
+            for(const p of pellets){
+                const px = p.x * CELL, py = p.y * CELL;
+                ctx.fillStyle = '#1e3a5f';
+                ctx.beginPath();
+                ctx.roundRect(px+1, py+1, PELLET_PX-2, PELLET_PX-2, 6);
+                ctx.fill();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.text, px + PELLET_PX/2, py + PELLET_PX/2);
+            }
+
+            // 蛇
+            snake.forEach((s, i) => {
+                const sx = s.x * CELL, sy = s.y * CELL;
+                if(i === 0){
+                    ctx.fillStyle = '#34d399';
+                    ctx.beginPath();
+                    ctx.roundRect(sx+1, sy+1, CELL-2, CELL-2, 4);
+                    ctx.fill();
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath();
+                    ctx.arc(sx + CELL*0.35, sy + CELL*0.35, 2, 0, Math.PI*2);
+                    ctx.arc(sx + CELL*0.65, sy + CELL*0.35, 2, 0, Math.PI*2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = i%2===0 ? '#10b981' : '#059669';
+                    ctx.fillRect(sx+1, sy+1, CELL-2, CELL-2);
+                }
+            });
+        }
+
+        // ——— 输入 ———
+        document.addEventListener('keydown', e => {
+            switch(e.key){
+                case 'ArrowUp':    if(dir.y===0){nextDir={x:0,y:-1}; e.preventDefault();} break;
+                case 'ArrowDown':  if(dir.y===0){nextDir={x:0,y:1};  e.preventDefault();} break;
+                case 'ArrowLeft':  if(dir.x===0){nextDir={x:-1,y:0}; e.preventDefault();} break;
+                case 'ArrowRight': if(dir.x===0){nextDir={x:1,y:0};  e.preventDefault();} break;
+            }
+        });
+
+        let touchStart = null;
+        canvas.addEventListener('touchstart', e => { touchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY}; e.preventDefault(); }, {passive:false});
+        canvas.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+        canvas.addEventListener('touchend', e => {
+            if(!touchStart) return;
+            const dx = e.changedTouches[0].clientX - touchStart.x;
+            const dy = e.changedTouches[0].clientY - touchStart.y;
+            if(Math.abs(dx) > Math.abs(dy)){
+                if(dx > 20 && dir.x===0) nextDir={x:1,y:0};
+                else if(dx < -20 && dir.x===0) nextDir={x:-1,y:0};
+            } else {
+                if(dy > 20 && dir.y===0) nextDir={x:0,y:1};
+                else if(dy < -20 && dir.y===0) nextDir={x:0,y:-1};
+            }
+            touchStart = null;
+        });
+
+        // ——— 启动 ———
+        async function startGame(){
+            sizeCanvas();
+            initState();
+            await fetchWordBank();
+            const ok = await loadWord();
+            if(!ok) return;
+            placePellets();
+            draw();
+            gameTimer = setInterval(tick, SPEED);
+            if(isMultiplayer){
+                mpSyncTimer = setInterval(mpSyncScore, 2000);
+            }
+        }
+    })();
+    </script>
+</body>
+</html>

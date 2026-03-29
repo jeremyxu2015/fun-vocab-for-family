@@ -1,6 +1,7 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <link rel="icon" href="/static/words/images/favicon.ico?v=2" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用户注册 - VocabMaster</title>
@@ -127,7 +128,7 @@
         </form>
 
         <div class="login-link">
-            已有账户？<a href="/login/">立即登录</a>
+            已有账户？<a href="{% url 'login' %}">立即登录</a>
         </div>
     </div>
 
@@ -143,5 +144,4 @@
     </script>
 </body>
 </html>
-
 

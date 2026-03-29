@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>班级管理 - VocabMaster</title>
@@ -184,16 +185,10 @@
         }
     </style>
 </head>
-<body>
-    <nav class="navbar">
-        <div><strong>📚 VocabMaster 教师后台</strong></div>
-        <div>
-            <a href="{% url 'teacher_dashboard' %}">← 返回后台</a>
-            <a href="{% url 'logout' %}">退出</a>
-        </div>
-    </nav>
-
-    <div class="container">
+<body style="display:flex;min-height:100vh;margin:0;">
+{% with active_page="classes" %}{% include "words/teacher/_sidebar.html" %}{% endwith %}
+<div style="flex:1;min-width:0;overflow-y:auto;">
+<div class="container">
         <div class="page-header">
             <h1>🏫 班级管理</h1>
             <p>管理班级名称，重命名或删除班级</p>
@@ -268,5 +263,7 @@
             form.classList.toggle('active');
         }
     </script>
+
+</div>
 </body>
 </html>

@@ -1,0 +1,363 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>强化训练 - VocabMaster</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; min-height: 100vh; color: white; }
+
+        /* 顶栏 */
+        .top-bar {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+        }
+        .top-bar h1 { font-size: 1.3rem; }
+        .top-bar a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem; }
+
+        /* 模式选择 */
+        .mode-bar {
+            display: flex; gap: 0; background: #1e293b; overflow-x: auto;
+        }
+        .mode-btn {
+            flex: 1; padding: 0.75rem 1rem; text-align: center; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; color: #94a3b8; border: none; background: none;
+            transition: all 0.15s; white-space: nowrap; min-width: 100px;
+        }
+        .mode-btn.active { color: #f87171; border-bottom: 3px solid #f87171; background: rgba(248,113,113,0.05); }
+        .mode-btn:hover:not(.active) { color: #e2e8f0; }
+
+        /* 统计 */
+        .stats-row {
+            display: flex; justify-content: center; gap: 2rem; padding: 1rem;
+            background: #1e293b; border-bottom: 1px solid #334155;
+        }
+        .stat { text-align: center; }
+        .stat .num { font-size: 1.3rem; font-weight: 800; }
+        .stat .lbl { font-size: 0.7rem; color: #64748b; }
+        .stat.red .num { color: #f87171; }
+        .stat.amber .num { color: #fbbf24; }
+        .stat.green .num { color: #34d399; }
+        .stat.blue .num { color: #38bdf8; }
+
+        /* 进度条 */
+        .progress-wrap { padding: 0.5rem 2rem; background: #1e293b; }
+        .progress-bar { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #f87171, #34d399); border-radius: 2px; transition: width 0.3s; }
+        .progress-text { font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 0.25rem; }
+
+        /* 卡片区域 */
+        .card-area {
+            display: flex; justify-content: center; align-items: center;
+            min-height: calc(100vh - 280px); padding: 2rem;
+        }
+        .card {
+            background: #1e293b; border-radius: 16px; padding: 2.5rem;
+            max-width: 500px; width: 100%; text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        /* 题目类型标签 */
+        .q-type {
+            display: inline-block; padding: 0.3rem 0.8rem; border-radius: 99px;
+            font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem;
+        }
+        .q-type.en2cn { background: rgba(56,189,248,0.15); color: #38bdf8; }
+        .q-type.cn2en { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .q-type.spelling { background: rgba(168,85,247,0.15); color: #a855f7; }
+
+        /* 题目 */
+        .question {
+            font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;
+            color: #f1f5f9; letter-spacing: 0.02em;
+        }
+        .question-sub { font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem; }
+
+        /* 薄弱标签 */
+        .weak-tags { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+        .weak-tag { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 99px; }
+        .weak-tag.err { background: rgba(248,113,113,0.15); color: #f87171; }
+        .weak-tag.ease { background: rgba(251,191,36,0.15); color: #fbbf24; }
+
+        /* 选项 */
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .opt-btn {
+            padding: 1rem; background: #334155; border: 2px solid #475569;
+            border-radius: 10px; color: #e2e8f0; font-size: 1rem; font-weight: 500;
+            cursor: pointer; transition: all 0.15s; text-align: center; word-break: break-all;
+        }
+        .opt-btn:hover { border-color: #6366f1; background: #3b4c6b; transform: scale(1.02); }
+        .opt-btn.correct { border-color: #10b981; background: rgba(16,185,129,0.2); color: #34d399; }
+        .opt-btn.wrong { border-color: #ef4444; background: rgba(239,68,68,0.2); color: #f87171; }
+        .opt-btn:disabled { cursor: default; transform: none; }
+
+        /* 拼写输入 */
+        .spell-input {
+            width: 100%; padding: 1rem; font-size: 1.2rem; text-align: center;
+            background: #334155; border: 2px solid #475569; border-radius: 10px;
+            color: white; outline: none; font-family: monospace; letter-spacing: 0.15em;
+        }
+        .spell-input:focus { border-color: #a855f7; }
+        .spell-hint { font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; }
+        .spell-submit {
+            margin-top: 1rem; padding: 0.75rem 2rem; background: #a855f7; color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        .spell-submit:hover { background: #9333ea; }
+
+        /* 结果反馈 */
+        .feedback {
+            margin-top: 1.25rem; padding: 0.75rem 1rem; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 500; display: none;
+        }
+        .feedback.show { display: block; }
+        .feedback.ok { background: rgba(16,185,129,0.15); color: #34d399; }
+        .feedback.fail { background: rgba(239,68,68,0.15); color: #f87171; }
+
+        /* 完成状态 */
+        .done-card { text-align: center; }
+        .done-card .icon { font-size: 4rem; margin-bottom: 1rem; }
+        .done-card h2 { margin-bottom: 0.5rem; }
+        .done-card p { color: #94a3b8; margin-bottom: 1.5rem; }
+        .done-card a {
+            display: inline-block; padding: 0.75rem 2rem; background: #6366f1;
+            color: white; border-radius: 8px; text-decoration: none; font-weight: 600;
+        }
+
+        /* 动画 */
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+        .shake { animation: shake 0.3s; }
+        @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+        .pop { animation: pop 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>🎯 个性化强化训练</h1>
+        <a href="{% url 'dashboard' %}">← 返回首页</a>
+    </div>
+
+    <!-- 训练模式切换 -->
+    <div class="mode-bar">
+        <button class="mode-btn active" data-mode="auto">🤖 智能推荐</button>
+        <button class="mode-btn" data-mode="wrong">❌ 错题攻克</button>
+        <button class="mode-btn" data-mode="low_ease">😰 难词突破</button>
+        <button class="mode-btn" data-mode="spelling">✍️ 拼写强化</button>
+    </div>
+
+    <!-- 统计 -->
+    <div class="stats-row">
+        <div class="stat red"><div class="num" id="errCount">{{ weak_count }}</div><div class="lbl">错题词</div></div>
+        <div class="stat amber"><div class="num" id="easeCount">{{ low_ease }}</div><div class="lbl">难词</div></div>
+        <div class="stat blue"><div class="num" id="familiarCount">{{ familiar_count }}</div><div class="lbl">熟悉</div></div>
+        <div class="stat green"><div class="num" id="correctStreak">0</div><div class="lbl">连对</div></div>
+    </div>
+
+    <!-- 进度 -->
+    <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+        <div class="progress-text" id="progressText">答对 0 题</div>
+    </div>
+
+    <!-- 题目区 -->
+    <div class="card-area">
+        <div class="card" id="questionCard">
+            <div style="color: #64748b; padding: 2rem;">加载中...</div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        function getCookie(n){let v=null;if(document.cookie){document.cookie.split(';').forEach(c=>{c=c.trim();if(c.startsWith(n+'='))v=decodeURIComponent(c.substring(n.length+1))})}return v}
+        const csrf = getCookie('csrftoken');
+
+        let currentMode = 'auto';
+        let streak = 0;
+        let totalCorrect = 0;
+        let totalAnswered = 0;
+        let currentQ = null;
+        let answered = false;
+
+        // 模式切换
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                streak = 0; totalCorrect = 0; totalAnswered = 0;
+                updateHUD();
+                loadQuestion();
+            });
+        });
+
+        function updateHUD(){
+            document.getElementById('correctStreak').textContent = streak;
+            const pct = totalAnswered > 0 ? Math.round(totalCorrect/totalAnswered*100) : 0;
+            document.getElementById('progressFill').style.width = Math.min(100, totalCorrect * 5) + '%';
+            document.getElementById('progressText').textContent = `答对 ${totalCorrect} 题 · 正确率 ${pct}% · 连续 ${streak}`;
+        }
+
+        async function loadQuestion(){
+            answered = false;
+            const card = document.getElementById('questionCard');
+            card.innerHTML = '<div style="color:#64748b;padding:2rem;">加载中...</div>';
+
+            try {
+                const r = await fetch(`/training/challenge/?mode=${currentMode}`, {credentials:'same-origin'});
+                const d = await r.json();
+
+                if(d.done){
+                    card.innerHTML = `<div class="done-card">
+                        <div class="icon">🎉</div>
+                        <h2>${d.message}</h2>
+                        <p>你已经掌握了所有单词，太厉害了！</p>
+                        <a href="{% url 'dashboard' %}">返回首页</a>
+                    </div>`;
+                    return;
+                }
+
+                currentQ = d;
+                renderQuestion(d);
+            } catch(e){
+                card.innerHTML = '<div style="color:#f87171;padding:2rem;">加载失败，请刷新重试</div>';
+            }
+        }
+
+        function renderQuestion(q){
+            const card = document.getElementById('questionCard');
+
+            const typeLabel = {en2cn:'看英文选中文', cn2en:'看中文选英文', spelling:'拼写单词'}[q.type] || q.type;
+            const typeClass = q.type;
+
+            let weakTags = '';
+            if(q.wrong_count > 0) weakTags += `<span class="weak-tag err">错${q.wrong_count}次</span>`;
+            if(q.ease_factor < 2.0) weakTags += `<span class="weak-tag ease">难度系数 ${q.ease_factor}</span>`;
+
+            let questionText, questionSub;
+            if(q.type === 'cn2en'){
+                questionText = q.definition;
+                questionSub = '选出对应的英文单词';
+            } else if(q.type === 'spelling'){
+                questionText = q.definition;
+                questionSub = q.pronunciation ? `/${q.pronunciation}/` : '拼出这个单词';
+            } else {
+                questionText = q.word;
+                questionSub = q.pronunciation ? `/${q.pronunciation}/` : '';
+            }
+
+            let optionsHtml;
+            if(q.type === 'spelling'){
+                optionsHtml = `
+                    <input type="text" class="spell-input" id="spellInput" placeholder="输入英文单词..." autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <div class="spell-hint">💡 提示：共 ${q.word.length} 个字母</div>
+                    <button class="spell-submit" onclick="submitSpelling()">确认</button>
+                `;
+            } else {
+                optionsHtml = '<div class="options">';
+                for(const opt of q.options){
+                    const escaped = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    optionsHtml += `<button class="opt-btn" onclick="selectOption(this, '${escaped}')">${opt}</button>`;
+                }
+                optionsHtml += '</div>';
+            }
+
+            card.innerHTML = `
+                <span class="q-type ${typeClass}">${typeLabel}</span>
+                <div class="question">${questionText}</div>
+                <div class="question-sub">${questionSub}</div>
+                <div class="weak-tags">${weakTags}</div>
+                ${optionsHtml}
+                <div class="feedback" id="feedback"></div>
+            `;
+
+            if(q.type === 'spelling'){
+                setTimeout(() => document.getElementById('spellInput')?.focus(), 100);
+                document.getElementById('spellInput')?.addEventListener('keydown', e => {
+                    if(e.key === 'Enter') submitSpelling();
+                });
+            }
+        }
+
+        window.selectOption = async function(btn, answer){
+            if(answered) return;
+            answered = true;
+
+            // 禁用所有按钮
+            document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+
+            const result = await submitAnswer(answer, currentQ.type);
+            totalAnswered++;
+
+            if(result.correct){
+                btn.classList.add('correct');
+                document.getElementById('questionCard').classList.add('pop');
+                streak++;
+                totalCorrect++;
+                showFeedback(result.message, true);
+            } else {
+                btn.classList.add('wrong');
+                document.getElementById('questionCard').classList.add('shake');
+                streak = 0;
+                showFeedback(result.message, false);
+                // 高亮正确答案
+                document.querySelectorAll('.opt-btn').forEach(b => {
+                    const isCorrect = currentQ.type === 'cn2en'
+                        ? b.textContent.trim().toLowerCase() === currentQ.word.toLowerCase()
+                        : b.textContent.trim() === currentQ.definition;
+                    if(isCorrect) b.classList.add('correct');
+                });
+            }
+            updateHUD();
+            setTimeout(loadQuestion, result.correct ? 1000 : 2500);
+        };
+
+        window.submitSpelling = async function(){
+            if(answered) return;
+            const input = document.getElementById('spellInput');
+            if(!input || !input.value.trim()) return;
+            answered = true;
+
+            const result = await submitAnswer(input.value.trim(), 'spelling');
+            totalAnswered++;
+
+            if(result.correct){
+                input.style.borderColor = '#10b981';
+                document.getElementById('questionCard').classList.add('pop');
+                streak++;
+                totalCorrect++;
+                showFeedback(result.message, true);
+            } else {
+                input.style.borderColor = '#ef4444';
+                document.getElementById('questionCard').classList.add('shake');
+                streak = 0;
+                showFeedback(result.message, false);
+            }
+            updateHUD();
+            setTimeout(loadQuestion, result.correct ? 1000 : 2500);
+        };
+
+        async function submitAnswer(answer, type){
+            const fd = new FormData();
+            fd.append('word_id', currentQ.word_id);
+            fd.append('answer', answer);
+            fd.append('type', type);
+            const r = await fetch('/training/answer/', {method:'POST', body:fd, credentials:'same-origin', headers:{'X-CSRFToken':csrf}});
+            return await r.json();
+        }
+
+        function showFeedback(msg, ok){
+            const el = document.getElementById('feedback');
+            if(!el) return;
+            el.textContent = msg;
+            el.className = 'feedback show ' + (ok ? 'ok' : 'fail');
+        }
+
+        // 启动
+        loadQuestion();
+    })();
+    </script>
+</body>
+</html>

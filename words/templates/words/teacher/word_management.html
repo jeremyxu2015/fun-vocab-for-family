@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>单词管理 - VocabMaster</title>
@@ -30,15 +31,10 @@
         .category-tag { background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--text-secondary); }
     </style>
 </head>
-<body>
-    <nav class="navbar">
-        <div class="logo">📚 VocabMaster</div>
-        <div class="nav-links">
-            <a href="{% url 'teacher_dashboard' %}">← 返回后台</a>
-            <a href="{% url 'logout' %}" class="btn btn-ghost">退出</a>
-        </div>
-    </nav>
-    <div class="container">
+<body style="display:flex;min-height:100vh;margin:0;">
+{% with active_page="words" %}{% include "words/teacher/_sidebar.html" %}{% endwith %}
+<div style="flex:1;min-width:0;overflow-y:auto;">
+<div class="container">
         <div class="page-header fade-in">
             <h1 style="font-size: 1.875rem; font-weight: 700;">📖 单词库管理</h1>
             <a href="{% url 'add_word' %}" class="btn btn-primary">+ 添加新单词</a>
@@ -73,7 +69,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
+        
+</div>
 </body>
 </html>

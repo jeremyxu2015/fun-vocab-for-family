@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>编辑单词 - VocabMaster</title>
@@ -28,14 +29,10 @@
         @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } .form-header { flex-direction: column; align-items: flex-start; gap: 1rem; } }
     </style>
 </head>
-<body>
-    <nav class="navbar">
-        <div class="logo">📚 VocabMaster</div>
-        <div class="nav-links">
-            <a href="{% url 'word_management' %}">← 返回单词列表</a>
-        </div>
-    </nav>
-    <div class="container">
+<body style="display:flex;min-height:100vh;margin:0;">
+{% with active_page="words" %}{% include "words/teacher/_sidebar.html" %}{% endwith %}
+<div style="flex:1;min-width:0;overflow-y:auto;">
+<div class="container">
         <div class="form-container fade-in">
             <div class="form-header">
                 <div>
@@ -85,7 +82,7 @@
                     <a href="{% url 'word_management' %}" class="btn btn-secondary">取消</a>
                 </div>
             </form>
-        </div>
-    </div>
+        
+</div>
 </body>
 </html>

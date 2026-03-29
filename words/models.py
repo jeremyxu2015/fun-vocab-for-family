@@ -161,3 +161,22 @@ class DailyStats(models.Model):
     
     class Meta:
         unique_together = ['user', 'date']
+
+
+class GameProgress(models.Model):
+    """游戏进度模型"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    current_level = models.IntegerField(default=1, verbose_name='当前关卡')
+    total_score = models.IntegerField(default=0, verbose_name='总积分')
+    combo = models.IntegerField(default=0, verbose_name='当前连击')
+    max_combo = models.IntegerField(default=0, verbose_name='最高连击')
+    lives = models.IntegerField(default=3, verbose_name='剩余生命')
+    
+    def add_score(self, points):
+        """增加积分"""
+        self.total_score += points
+        self.save()
+        return points
+    
+    def __str__(self):
+        return f"{self.user.username} - 第{self.current_level}关"

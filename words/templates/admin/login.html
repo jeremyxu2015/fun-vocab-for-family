@@ -1,7 +1,8 @@
-{}
-{}
+{% load static %}
+{% extends "admin/base_site.html" %}
+{% block title %}登录 | VocabMaster Admin{% endblock %}
 
-{}
+{% block content %}
 <div id="content-main" style="max-width: 400px; margin: 50px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
 <h1 style="text-align: center; margin-bottom: 30px; color: #1e293b;">📚 VocabMaster</h1>
 
@@ -21,4 +22,4 @@
 <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">登录</button>
 </form>
 </div>
-{}
+{% endblock %}
