@@ -1,0 +1,332 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>强化训练 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-card: #ffffff;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .header a { color: var(--primary); text-decoration: none; margin-right: 1rem; }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
+        
+        .mode-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+        }
+        .mode-btn.active {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        .mode-btn:hover { border-color: var(--primary); }
+        
+        .question-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        .question-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        .question-word {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .question-phonetic {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        .option-btn {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .option-btn:hover { border-color: var(--primary); }
+        .option-btn.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .option-btn.wrong { border-color: var(--error); background: rgba(239, 68, 68, 0.1); }
+        
+        .spelling-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+        }
+        .spelling-input:focus { outline: none; border-color: var(--primary); }
+        
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .result-correct { color: var(--success); }
+        .result-wrong { color: var(--error); }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        
+        .word-info {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'child_dashboard' %}">← 返回</a>
+            <h1>🎯 强化训练</h1>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">{{ weak_count }}</div>
+                <div class="stat-label">错题数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ low_ease }}</div>
+                <div class="stat-label">难词数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ familiar_count }}</div>
+                <div class="stat-label">熟悉词</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ new_count }}</div>
+                <div class="stat-label">新词</div>
+            </div>
+        </div>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="auto">🤖 智能推荐</button>
+            <button class="mode-btn" data-mode="wrong">❌ 错题优先</button>
+            <button class="mode-btn" data-mode="low_ease">🔥 难词攻坚</button>
+            <button class="mode-btn" data-mode="spelling">✍️ 拼写训练</button>
+        </div>
+        
+        <div class="question-card" id="questionCard">
+            <div class="question-type" id="questionType">加载中...</div>
+            <div class="question-word" id="questionWord">-</div>
+            <div class="question-phonetic" id="questionPhonetic"></div>
+            
+            <div id="optionsContainer"></div>
+        </div>
+        
+        <div class="result-card" id="resultCard" style="display: none;">
+            <h3 id="resultTitle"></h3>
+            <p id="resultMessage"></p>
+            <div class="word-info" id="wordInfo" style="display: none;">
+                <p><strong>释义：</strong><span id="resultDefinition"></span></p>
+            </div>
+            <button class="btn" onclick="nextQuestion()" style="margin-top: 1rem;">下一题</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentMode = 'auto';
+        let currentWord = null;
+        
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                loadQuestion();
+            });
+        });
+        
+        function loadQuestion() {
+            fetch(`{% url 'training_challenge' %}?mode=${currentMode}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.done) {
+                        document.getElementById('questionCard').innerHTML = `
+                            <div style="text-align: center; padding: 2rem;">
+                                <p style="font-size: 3rem;">🎉</p>
+                                <p style="font-size: 1.25rem; margin-top: 1rem;">${data.message}</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    currentWord = data;
+                    document.getElementById('questionType').textContent = 
+                        data.type === 'en2cn' ? '英译中' : 
+                        data.type === 'cn2en' ? '中译英' : '拼写';
+                    document.getElementById('questionWord').textContent = 
+                        data.type === 'cn2en' ? data.definition : data.word;
+                    document.getElementById('questionPhonetic').textContent = 
+                        data.type === 'en2cn' ? data.pronunciation : '';
+                    
+                    const container = document.getElementById('optionsContainer');
+                    document.getElementById('resultCard').style.display = 'none';
+                    
+                    if (data.type === 'spelling') {
+                        container.innerHTML = `
+                            <input type="text" class="spelling-input" id="spellingInput" placeholder="输入英文单词" autofocus>
+                            <button class="btn" onclick="checkSpelling()" style="width: 100%; margin-top: 1rem;">确认</button>
+                        `;
+                        document.getElementById('spellingInput').addEventListener('keypress', e => {
+                            if (e.key === 'Enter') checkSpelling();
+                        });
+                    } else {
+                        container.innerHTML = data.options.map((opt, i) => `
+                            <button class="option-btn" onclick="checkAnswer(this, '${opt.replace(/'/g, "\\'")}')">${opt}</button>
+                        `).join('');
+                    }
+                });
+        }
+        
+        function checkAnswer(btn, answer) {
+            const formData = new FormData();
+            formData.append('word_id', currentWord.word_id);
+            formData.append('answer', answer);
+            formData.append('type', currentWord.type);
+            
+            fetch('{% url "training_answer" %}', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+                if (data.correct) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('wrong');
+                }
+                
+                document.getElementById('resultCard').style.display = 'block';
+                document.getElementById('resultTitle').textContent = data.correct ? '✅ 正确！' : '❌ 错误';
+                document.getElementById('resultTitle').className = data.correct ? 'result-correct' : 'result-wrong';
+                document.getElementById('resultMessage').textContent = data.message;
+                
+                if (!data.correct) {
+                    document.getElementById('wordInfo').style.display = 'block';
+                    document.getElementById('resultDefinition').textContent = currentWord.definition;
+                }
+            });
+        }
+        
+        function checkSpelling() {
+            const answer = document.getElementById('spellingInput').value.trim();
+            const formData = new FormData();
+            formData.append('word_id', currentWord.word_id);
+            formData.append('answer', answer);
+            formData.append('type', 'spelling');
+            
+            fetch('{% url "training_answer" %}', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('resultCard').style.display = 'block';
+                document.getElementById('resultTitle').textContent = data.correct ? '✅ 正确！' : '❌ 错误';
+                document.getElementById('resultTitle').className = data.correct ? 'result-correct' : 'result-wrong';
+                document.getElementById('resultMessage').textContent = data.message;
+                
+                if (!data.correct) {
+                    document.getElementById('wordInfo').style.display = 'block';
+                    document.getElementById('resultDefinition').textContent = `正确拼写: ${data.word}`;
+                }
+            });
+        }
+        
+        function nextQuestion() {
+            loadQuestion();
+        }
+        
+        // 初始加载
+        loadQuestion();
+    </script>
+</body>
+</html>

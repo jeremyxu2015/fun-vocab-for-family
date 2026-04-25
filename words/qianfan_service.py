@@ -1,0 +1,158 @@
+"""
+AI 大模型API服务
+用于从PDF文本中智能提取单词和释义
+支持硅基流动、百度千帆等 OpenAI 兼容 API
+"""
+import requests
+import json
+from django.conf import settings
+
+
+class AIService:
+    """AI API封装 (支持 OpenAI 兼容接口)"""
+    
+    def __init__(self):
+        self.api_key = getattr(settings, 'AI_API_KEY', '')
+        self.model = getattr(settings, 'AI_MODEL', 'Qwen/Qwen2.5-7B-Instruct')
+        self.base_url = getattr(settings, 'AI_BASE_URL', 'https://api.siliconflow.cn/v1/chat/completions')
+    
+    def chat(self, messages, temperature=0.7, max_tokens=2000):
+        """
+        调用 AI 对话 API (OpenAI 兼容接口)
+        
+        Args:
+            messages: 对话消息列表，格式 [{"role": "user", "content": "..."}]
+            temperature: 温度参数，0-1
+            max_tokens: 最大输出token数
+        
+        Returns:
+            str: 模型回复内容
+        """
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        
+        try:
+            response = requests.post(self.base_url, headers=headers, json=payload, timeout=None)
+            result = response.json()
+            
+            if 'choices' in result and len(result['choices']) > 0:
+                return result['choices'][0]['message']['content']
+            elif 'error' in result:
+                raise Exception(f"API调用错误: {result['error'].get('message', '未知错误')}")
+            else:
+                raise Exception(f"未知响应格式: {result}")
+        except requests.Timeout:
+            raise Exception("API请求超时，请稍后重试")
+        except Exception as e:
+            raise Exception(f"API调用失败: {str(e)}")
+    
+    def extract_words_from_text(self, text, max_words=100):
+        """
+        从文本中提取单词和释义
+        
+        Args:
+            text: PDF提取的文本内容
+            max_words: 最大提取单词数
+        
+        Returns:
+            list: 单词列表，格式 [{"word": "...", "definition": "...", "pronunciation": "..."}]
+        """
+        # 限制文本长度，避免超出API限制
+        if len(text) > 8000:
+            text = text[:8000] + "..."
+        
+        prompt = f"""请从以下文本中提取英语单词及其中文释义。要求：
+1. 只提取英语单词，忽略纯中文内容
+2. 每个单词包含：单词本身、音标（如果有）、中文释义
+3. 如果文本中有例句，可以提取例句和翻译
+4. 最多提取{max_words}个单词
+5. 返回JSON数组格式，不要包含其他说明文字
+
+文本内容：
+{text}
+
+请严格按照以下JSON格式返回，不要包含```json标记：
+[
+  {{"word": "apple", "pronunciation": "/ˈæpl/", "definition": "n. 苹果", "example": "I eat an apple.", "example_translation": "我吃一个苹果。"}},
+  {{"word": "book", "pronunciation": "/bʊk/", "definition": "n. 书；v. 预订"}}
+]
+
+如果没有找到单词，返回空数组：[]
+"""
+        
+        messages = [{"role": "user", "content": prompt}]
+        
+        try:
+            result = self.chat(messages, temperature=0.3, max_tokens=4000)
+            
+            # 清理返回结果，移除可能的markdown标记
+            result = result.strip()
+            if result.startswith('```json'):
+                result = result[7:]
+            if result.startswith('```'):
+                result = result[3:]
+            if result.endswith('```'):
+                result = result[:-3]
+            result = result.strip()
+            
+            # 尝试找到 JSON 数组
+            start_idx = result.find('[')
+            end_idx = result.rfind(']')
+            if start_idx != -1 and end_idx != -1:
+                result = result[start_idx:end_idx+1]
+            
+            # 解析JSON
+            words = json.loads(result)
+            
+            # 验证格式
+            if not isinstance(words, list):
+                raise ValueError("返回格式错误：不是数组")
+            
+            valid_words = []
+            for item in words:
+                if isinstance(item, dict):
+                    # 尝试获取单词字段（兼容各种可能的字段名）
+                    word = None
+                    for key in ['word', 'Word', '单词', 'wordword']:
+                        if key in item and item[key]:
+                            word = str(item[key]).strip()
+                            break
+                    
+                    # 获取释义字段
+                    definition = None
+                    for key in ['definition', 'Definition', '释义', 'meaning', 'meaning_cn']:
+                        if key in item and item[key]:
+                            definition = str(item[key]).strip()
+                            break
+                    
+                    if word and definition:
+                        valid_words.append({
+                            'word': word,
+                            'pronunciation': str(item.get('pronunciation', '')).strip(),
+                            'definition': definition,
+                            'example': str(item.get('example', '')).strip(),
+                            'example_translation': str(item.get('example_translation', '')).strip()
+                        })
+            
+            return valid_words
+            
+        except json.JSONDecodeError as e:
+            raise Exception(f"解析AI返回结果失败: {str(e)}")
+        except Exception as e:
+            raise Exception(f"单词提取失败: {str(e)}")
+
+
+# 创建全局实例
+ai_service = AIService()
+
+# 兼容旧代码的别名
+qianfan_service = ai_service

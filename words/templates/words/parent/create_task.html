@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建任务 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        .header { display: flex; align-items: center; margin-bottom: 2rem; }
+        .header a { color: var(--primary); text-decoration: none; margin-right: 1rem; }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        .form-input, select, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        
+        .word-select {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+        .word-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+        .word-item:hover { background: #f1f5f9; }
+        .word-item input { margin-right: 0.75rem; }
+        .word-item label { cursor: pointer; flex: 1; }
+        .word-text { font-weight: 600; color: var(--primary); }
+        .word-def { font-size: 0.85rem; color: #64748b; margin-left: 0.5rem; }
+        
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        
+        .row { display: flex; gap: 1rem; }
+        .row .form-group { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'task_management' %}">← 返回</a>
+            <h1>创建学习任务</h1>
+        </div>
+        
+        <div class="card">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">任务标题</label>
+                        <input type="text" name="title" class="form-input" required placeholder="如：本周单词任务">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">截止日期</label>
+                        <input type="date" name="due_date" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">分配给孩子</label>
+                    <select name="child" class="form-input" required>
+                        <option value="">选择孩子</option>
+                        {% for child in children %}
+                        <option value="{{ child.id }}" {% if request.GET.child == child.id|stringformat:"s" %}selected{% endif %}>
+                            {{ child.userprofile.nickname }} ({{ child.userprofile.grade|default:"未设置年级" }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">选择单词 (已选 <span id="selected-count">0</span> 个)</label>
+                    <div class="word-select">
+                        {% for word in words %}
+                        <div class="word-item">
+                            <input type="checkbox" name="words" value="{{ word.id }}" id="word-{{ word.id }}">
+                            <label for="word-{{ word.id }}">
+                                <span class="word-text">{{ word.word }}</span>
+                                <span class="word-def">{{ word.definition|truncatechars:20 }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">备注（可选）</label>
+                    <textarea name="note" class="form-input" rows="2" placeholder="给孩子的留言..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn">创建任务</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('input[name="words"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const count = document.querySelectorAll('input[name="words"]:checked').length;
+                document.getElementById('selected-count').textContent = count;
+            });
+        });
+    </script>
+</body>
+</html>

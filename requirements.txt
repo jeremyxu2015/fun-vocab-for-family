@@ -1,0 +1,14 @@
+# Django
+Django>=4.2,<5.0
+
+# PDF处理
+PyMuPDF>=1.23.0
+
+# Excel处理（用于批量导入）
+openpyxl>=3.1.0
+
+# HTTP请求（Kimi API）
+requests>=2.31.0
+
+# 生产环境静态文件处理
+whitenoise>=6.6.0

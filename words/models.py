@@ -5,85 +5,63 @@ import random
 import string
 from datetime import timedelta
 
-class RegistrationCode(models.Model):
-    """教师生成的注册验证码"""
-    code = models.CharField(max_length=6, unique=True, verbose_name='验证码')
-    class_name = models.CharField(max_length=20, verbose_name='目标班级')
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='生成教师')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='生成时间')
-    expires_at = models.DateTimeField(verbose_name='过期时间')
-    is_used = models.BooleanField(default=False, verbose_name='已使用')
-    used_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
-                                related_name='used_codes', verbose_name='使用学生')
-    used_at = models.DateTimeField(null=True, blank=True, verbose_name='使用时间')
-    max_uses = models.IntegerField(default=1, verbose_name='最大使用次数')  # 1=一次性，>1=批量注册
-    used_count = models.IntegerField(default=0, verbose_name='已使用次数')
+
+class Family(models.Model):
+    """家庭模型 - 一个家庭可以有多个家长和孩子"""
+    name = models.CharField(max_length=50, verbose_name='家庭名称')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    invite_code = models.CharField(max_length=8, unique=True, verbose_name='邀请码', blank=True)
     
     class Meta:
-        verbose_name = '注册验证码'
-        verbose_name_plural = '注册验证码管理'
-        ordering = ['-created_at']
+        verbose_name = '家庭'
+        verbose_name_plural = '家庭管理'
     
     def __str__(self):
-        return f"{self.class_name} - {self.code} ({'已用完' if self.is_used else '有效'})"
+        return self.name
     
-    @classmethod
-    def generate_code(cls, class_name, teacher, max_uses=1, valid_minutes=15):
-        """生成6位数字验证码"""
-        # 生成不重复的6位数字
-        while True:
-            code = ''.join(random.choices(string.digits, k=6))
-            if not cls.objects.filter(code=code, is_used=False).exists():
-                break
-        
-        expires_at = timezone.now() + timedelta(minutes=valid_minutes)
-        
-        return cls.objects.create(
-            code=code,
-            class_name=class_name,
-            teacher=teacher,
-            expires_at=expires_at,
-            max_uses=max_uses
-        )
-    
-    def is_valid(self):
-        """检查验证码是否有效"""
-        if self.is_used and self.used_count >= self.max_uses:
-            return False
-        if timezone.now() > self.expires_at:
-            return False
-        return True
-    
-    def use(self, user):
-        """使用验证码"""
-        if not self.is_valid():
-            return False
-        
-        self.used_count += 1
-        if self.used_count >= self.max_uses:
-            self.is_used = True
-        
-        if self.used_count == 1:  # 第一次使用记录使用者
-            self.used_by = user
-            self.used_at = timezone.now()
-        
-        self.save()
-        return True
+    def save(self, *args, **kwargs):
+        if not self.invite_code:
+            # 生成8位邀请码
+            while True:
+                code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                if not Family.objects.filter(invite_code=code).exists():
+                    self.invite_code = code
+                    break
+        super().save(*args, **kwargs)
+
 
 class UserProfile(models.Model):
+    """用户档案 - 支持家长和孩子两种角色"""
+    ROLE_CHOICES = [
+        ('parent', '家长'),
+        ('child', '孩子'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_teacher = models.BooleanField(default=False, verbose_name='教师')
-    student_id = models.CharField(max_length=20, blank=True, verbose_name='学号')
-    class_name = models.CharField(max_length=20, blank=True, verbose_name='班级')
-    real_name = models.CharField(max_length=50, blank=True, verbose_name='姓名')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='child', verbose_name='角色')
+    family = models.ForeignKey(Family, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='所属家庭')
+    nickname = models.CharField(max_length=30, blank=True, verbose_name='昵称/小名')
+    grade = models.CharField(max_length=20, blank=True, verbose_name='年级')
+    avatar = models.CharField(max_length=10, blank=True, default='👶', verbose_name='头像emoji')
     daily_goal = models.IntegerField(default=10, verbose_name='每日目标')
     current_streak = models.IntegerField(default=0, verbose_name='连续天数')
     is_deleted = models.BooleanField(default=False, verbose_name='已删除')
     
+    class Meta:
+        verbose_name = '用户档案'
+        verbose_name_plural = '用户档案'
+    
     def __str__(self):
-        if self.is_teacher:
-            return f"{self.real_name or self.user.username} (教师)"
-        return f"{self.class_name} {self.real_name} ({self.student_id})"
+        role_text = '家长' if self.role == 'parent' else '孩子'
+        return f"{self.nickname or self.user.username} ({role_text})"
+    
+    @property
+    def is_parent(self):
+        return self.role == 'parent'
+    
+    @property
+    def is_child(self):
+        return self.role == 'child'
 
 class Word(models.Model):
     word = models.CharField(max_length=100, unique=True, verbose_name='单词')
@@ -130,27 +108,58 @@ class UserWord(models.Model):
     class Meta:
         unique_together = ['user', 'word']
 
-class Homework(models.Model):
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='homework_created')
-    class_name = models.CharField(max_length=20, verbose_name='班级')
-    title = models.CharField(max_length=100, verbose_name='作业标题')
+class FamilyTask(models.Model):
+    """家庭学习任务 - 家长给孩子布置的学习任务"""
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks_created', verbose_name='创建家长')
+    child = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks_assigned', verbose_name='分配给孩子')
+    title = models.CharField(max_length=100, verbose_name='任务标题')
     words = models.ManyToManyField(Word, verbose_name='单词列表')
     due_date = models.DateField(verbose_name='截止日期')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True, verbose_name='进行中')
-    
-    def __str__(self):
-        return f"{self.class_name} - {self.title}"
-
-class HomeworkSubmission(models.Model):
-    homework = models.ForeignKey(Homework, on_delete=models.CASCADE)
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    completed_words = models.IntegerField(default=0, verbose_name='完成数量')
-    score = models.IntegerField(default=0, verbose_name='得分')
-    submitted_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True, verbose_name='备注')
     
     class Meta:
-        unique_together = ['homework', 'student']
+        verbose_name = '学习任务'
+        verbose_name_plural = '学习任务'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.child.userprofile.nickname or self.child.username} - {self.title}"
+
+
+class TaskProgress(models.Model):
+    """任务进度"""
+    task = models.ForeignKey(FamilyTask, on_delete=models.CASCADE)
+    completed_words = models.IntegerField(default=0, verbose_name='完成数量')
+    score = models.IntegerField(default=0, verbose_name='得分')
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['task']
+
+
+class PDFWordList(models.Model):
+    """PDF单词导入记录"""
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, verbose_name='所属家庭')
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='上传者')
+    file_name = models.CharField(max_length=255, verbose_name='文件名')
+    words_extracted = models.IntegerField(default=0, verbose_name='提取单词数')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='上传时间')
+    status = models.CharField(max_length=20, choices=[
+        ('pending', '处理中'),
+        ('completed', '已完成'),
+        ('failed', '失败')
+    ], default='pending', verbose_name='状态')
+    error_message = models.TextField(blank=True, verbose_name='错误信息')
+    
+    class Meta:
+        verbose_name = 'PDF导入记录'
+        verbose_name_plural = 'PDF导入记录'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.file_name} - {self.words_extracted}个单词"
 
 class DailyStats(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

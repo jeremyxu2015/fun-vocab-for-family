@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加单词 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { display: flex; align-items: center; margin-bottom: 2rem; }
+        .header a { color: var(--primary); text-decoration: none; margin-right: 1rem; }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+        textarea.form-input { min-height: 100px; resize: vertical; }
+        
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        
+        .row { display: flex; gap: 1rem; }
+        .row .form-group { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'word_management' %}">← 返回</a>
+            <h1>添加单词</h1>
+        </div>
+        
+        <div class="card">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">单词 *</label>
+                        <input type="text" name="word" class="form-input" required placeholder="apple">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">音标</label>
+                        <input type="text" name="pronunciation" class="form-input" placeholder="/ˈæpl/">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">释义 *</label>
+                    <input type="text" name="definition" class="form-input" required placeholder="n. 苹果">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">例句</label>
+                    <textarea name="example" class="form-input" placeholder="I eat an apple every day."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">例句翻译</label>
+                    <input type="text" name="example_translation" class="form-input" placeholder="我每天吃一个苹果。">
+                </div>
+                
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">分类</label>
+                        <input type="text" name="category" class="form-input" placeholder="如：小学、初中、CET-4">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">难度</label>
+                        <select name="difficulty" class="form-input">
+                            <option value="1">Level 1 - 简单</option>
+                            <option value="2">Level 2</option>
+                            <option value="3" selected>Level 3 - 中等</option>
+                            <option value="4">Level 4</option>
+                            <option value="5">Level 5 - 困难</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">添加单词</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

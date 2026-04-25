@@ -1,0 +1,226 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-card: #ffffff;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .back-link {
+            color: var(--primary);
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+        
+        .word-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        .word-mode {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        .word-text {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        .word-phonetic {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        .word-definition {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        .word-example {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 12px;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+        .word-example-translation {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-style: normal;
+        }
+        
+        .rating-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .rating-title {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .rating-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .rating-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .rating-btn:hover { transform: translateY(-2px); }
+        .rating-btn.hard {
+            border-color: var(--error);
+            color: var(--error);
+        }
+        .rating-btn.hard:hover { background: var(--error); color: white; }
+        .rating-btn.medium {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+        .rating-btn.medium:hover { background: var(--warning); color: white; }
+        .rating-btn.easy {
+            border-color: var(--success);
+            color: var(--success);
+        }
+        .rating-btn.easy:hover { background: var(--success); color: white; }
+        .rating-label {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            opacity: 0.8;
+        }
+        
+        .task-badge {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'child_dashboard' %}" class="back-link">← 返回</a>
+            <h1>{% if mode == 'review' %}复习单词{% elif mode == 'task' %}学习任务{% else %}学习新词{% endif %}</h1>
+        </div>
+        
+        {% if mode == 'task' and task %}
+        <div style="text-align: center;">
+            <span class="task-badge">📋 {{ task.title }}</span>
+        </div>
+        {% endif %}
+        
+        <div class="word-card">
+            <span class="word-mode">
+                {% if mode == 'review' %}复习模式
+                {% elif mode == 'task' %}任务模式
+                {% else %}学习模式{% endif %}
+            </span>
+            
+            <div class="word-text">{{ word.word }}</div>
+            {% if word.pronunciation %}
+            <div class="word-phonetic">{{ word.pronunciation }}</div>
+            {% endif %}
+            
+            <div class="word-definition">{{ word.definition }}</div>
+            
+            {% if word.example %}
+            <div class="word-example">
+                {{ word.example }}
+                {% if word.example_translation %}
+                <div class="word-example-translation">{{ word.example_translation }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="rating-section">
+            <div class="rating-title">这个单词你记得怎么样？</div>
+            <div class="rating-buttons">
+                <form method="post" action="{% url 'answer' word.id %}" style="flex: 1;">
+                    {% csrf_token %}
+                    <input type="hidden" name="quality" value="1">
+                    <button type="submit" class="rating-btn hard">
+                        😅 没记住
+                        <span class="rating-label">重新学习</span>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'answer' word.id %}" style="flex: 1;">
+                    {% csrf_token %}
+                    <input type="hidden" name="quality" value="2">
+                    <button type="submit" class="rating-btn medium">
+                        🤔 有点印象
+                        <span class="rating-label">继续复习</span>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'answer' word.id %}" style="flex: 1;">
+                    {% csrf_token %}
+                    <input type="hidden" name="quality" value="3">
+                    <button type="submit" class="rating-btn easy">
+                        😊 记住了
+                        <span class="rating-label">延长复习</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 自动朗读单词
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance('{{ word.word }}');
+            utterance.lang = 'en-US';
+            // speechSynthesis.speak(utterance); // 可选：自动朗读
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孩子注册 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .register-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 450px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .header p { color: #64748b; }
+        
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .avatar-select {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .avatar-option.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        .avatar-option input { display: none; }
+        
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        
+        .alert {
+            padding: 0.875rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .alert-error { background: #fed7d7; color: #c53030; }
+        .alert-success { background: #d1fae5; color: #065f46; }
+        
+        .links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .links a { color: var(--primary); text-decoration: none; }
+        
+        .invite-hint {
+            background: #fef3c7;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="header">
+            <h1>👶 孩子注册</h1>
+            <p>加入家庭，开始学习之旅</p>
+        </div>
+        
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        
+        <div class="invite-hint">
+            💡 请向家长获取家庭邀请码
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">家庭邀请码</label>
+                <input type="text" name="invite_code" class="form-input" required placeholder="8位邀请码" maxlength="8" style="text-transform: uppercase;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">用户名</label>
+                <input type="text" name="username" class="form-input" required placeholder="用于登录">
+            </div>
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" name="password" class="form-input" required placeholder="至少6位">
+            </div>
+            <div class="form-group">
+                <label class="form-label">昵称/小名</label>
+                <input type="text" name="nickname" class="form-input" placeholder="如：小明、小红">
+            </div>
+            <div class="form-group">
+                <label class="form-label">年级</label>
+                <select name="grade" class="form-input">
+                    <option value="">选择年级</option>
+                    <option value="一年级">一年级</option>
+                    <option value="二年级">二年级</option>
+                    <option value="三年级">三年级</option>
+                    <option value="四年级">四年级</option>
+                    <option value="五年级">五年级</option>
+                    <option value="六年级">六年级</option>
+                    <option value="初一">初一</option>
+                    <option value="初二">初二</option>
+                    <option value="初三">初三</option>
+                    <option value="高一">高一</option>
+                    <option value="高二">高二</option>
+                    <option value="高三">高三</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">选择头像</label>
+                <div class="avatar-select">
+                    <label class="avatar-option selected">
+                        <input type="radio" name="avatar" value="👶" checked>
+                        👶
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="👦">
+                        👦
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="👧">
+                        👧
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="🧒">
+                        🧒
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="🐱">
+                        🐱
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="🐶">
+                        🐶
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="🦊">
+                        🦊
+                    </label>
+                    <label class="avatar-option">
+                        <input type="radio" name="avatar" value="🐼">
+                        🐼
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn">注册并加入家庭</button>
+        </form>
+        
+        <div class="links">
+            <a href="{% url 'login' %}">已有账号？返回登录</a>
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>

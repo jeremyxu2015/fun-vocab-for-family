@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root { --primary: #6366f1; --success: #10b981; --warning: #f59e0b; --error: #ef4444; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { display: inline; margin-left: 1rem; }
+        .header a { color: var(--primary); text-decoration: none; }
+        .btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .task-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+        }
+        .task-avatar { font-size: 2rem; margin-right: 1rem; }
+        .task-info { flex: 1; }
+        .task-title { font-weight: 600; }
+        .task-meta { font-size: 0.85rem; color: #64748b; }
+        .task-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .status-active { background: #d1fae5; color: #065f46; }
+        .status-overdue { background: #fed7d7; color: #c53030; }
+        .status-done { background: #e2e8f0; color: #64748b; }
+        
+        .empty-state { text-align: center; padding: 3rem; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="{% url 'parent_dashboard' %}">← 返回</a>
+                <h1>📋 学习任务</h1>
+            </div>
+            <a href="{% url 'create_task' %}" class="btn">创建任务</a>
+        </div>
+        
+        {% if tasks %}
+            {% for task in tasks %}
+            <div class="task-card">
+                <span class="task-avatar">{{ task.child.userprofile.avatar }}</span>
+                <div class="task-info">
+                    <div class="task-title">{{ task.title }}</div>
+                    <div class="task-meta">
+                        给 {{ task.child.userprofile.nickname }} · {{ task.words.count }} 个单词 · 截止 {{ task.due_date|date:"m月d日" }}
+                    </div>
+                </div>
+                <span class="task-status {% if task.is_active and task.due_date >= today %}status-active{% elif task.is_active %}status-overdue{% else %}status-done{% endif %}">
+                    {% if task.is_active and task.due_date >= today %}进行中
+                    {% elif task.is_active %}已过期
+                    {% else %}已结束{% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p style="font-size: 3rem; margin-bottom: 1rem;">📝</p>
+                <p>还没有创建学习任务</p>
+                <a href="{% url 'create_task' %}" class="btn" style="margin-top: 1rem; display: inline-block;">创建第一个任务</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

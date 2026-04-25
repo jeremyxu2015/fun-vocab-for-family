@@ -1,0 +1,281 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家长控制台 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-card: #ffffff;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.5rem; }
+        .header-actions a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+            opacity: 0.9;
+        }
+        .header-actions a:hover { opacity: 1; }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .child-list { list-style: none; }
+        .child-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+        .child-item:last-child { border-bottom: none; }
+        .child-avatar {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+        .child-info { flex: 1; }
+        .child-name { font-weight: 600; }
+        .child-stats { font-size: 0.85rem; color: var(--text-secondary); }
+        .child-actions a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .nav-card {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            text-decoration: none;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s;
+        }
+        .nav-card:hover { transform: translateY(-2px); }
+        .nav-icon { font-size: 2rem; margin-right: 1rem; }
+        .nav-text { font-weight: 600; }
+        .nav-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        
+        .invite-code {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .invite-code code {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #92400e;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .alert-success { background: #d1fae5; color: #065f46; }
+        .alert-error { background: #fed7d7; color: #c53030; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        
+        <div class="header">
+            <div>
+                <h1>🏠 家长控制台</h1>
+                <p>{{ family.name }}</p>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'change_password' %}">修改密码</a>
+                <a href="{% url 'logout' %}">退出</a>
+            </div>
+        </div>
+        
+        <!-- 邀请码 -->
+        <div class="card">
+            <div class="card-title">🎫 家庭邀请码</div>
+            <div class="invite-code">
+                <p style="margin-bottom: 0.5rem; color: #92400e;">分享此邀请码给孩子注册</p>
+                <code>{{ family.invite_code }}</code>
+            </div>
+        </div>
+        
+        <!-- 快捷入口 -->
+        <div class="card">
+            <div class="card-title">📌 常用功能</div>
+            <div class="nav-grid">
+                <a href="{% url 'pdf_import' %}" class="nav-card">
+                    <span class="nav-icon">📄</span>
+                    <div>
+                        <div class="nav-text">PDF导入单词</div>
+                        <div class="nav-desc">从PDF文件智能提取单词</div>
+                    </div>
+                </a>
+                <a href="{% url 'word_management' %}" class="nav-card">
+                    <span class="nav-icon">📚</span>
+                    <div>
+                        <div class="nav-text">单词管理</div>
+                        <div class="nav-desc">添加、编辑、删除单词</div>
+                    </div>
+                </a>
+                <a href="{% url 'child_management' %}" class="nav-card">
+                    <span class="nav-icon">👨‍👩‍👧</span>
+                    <div>
+                        <div class="nav-text">孩子管理</div>
+                        <div class="nav-desc">查看学习进度、重置密码</div>
+                    </div>
+                </a>
+                <a href="{% url 'task_management' %}" class="nav-card">
+                    <span class="nav-icon">📋</span>
+                    <div>
+                        <div class="nav-text">学习任务</div>
+                        <div class="nav-desc">布置学习任务</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 孩子列表 -->
+        <div class="card">
+            <div class="card-title">👶 孩子学习情况</div>
+            {% if children_stats %}
+            <ul class="child-list">
+                {% for stat in children_stats %}
+                <li class="child-item">
+                    <span class="child-avatar">{{ stat.profile.avatar }}</span>
+                    <div class="child-info">
+                        <div class="child-name">{{ stat.profile.nickname }}</div>
+                        <div class="child-stats">
+                            已掌握 {{ stat.mastered }} 词 · 学习中 {{ stat.learning }} 词
+                            {% if stat.due_count > 0 %}· 待复习 {{ stat.due_count }} 词{% endif %}
+                        </div>
+                    </div>
+                    <div class="child-actions">
+                        <a href="{% url 'create_task' %}?child={{ stat.user.id }}">布置任务</a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                还没有添加孩子，请将邀请码分享给孩子注册
+            </p>
+            {% endif %}
+        </div>
+        
+        <!-- 统计概览 -->
+        <div class="card">
+            <div class="card-title">📊 家庭统计</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ children_stats|length }}</div>
+                    <div class="stat-label">孩子数量</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ total_words }}</div>
+                    <div class="stat-label">单词总数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ active_tasks }}</div>
+                    <div class="stat-label">进行中任务</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

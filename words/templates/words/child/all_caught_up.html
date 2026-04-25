@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全部完成 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+        .icon { font-size: 5rem; margin-bottom: 1rem; }
+        h1 { color: var(--success); margin-bottom: 0.5rem; }
+        p { color: #64748b; margin-bottom: 1.5rem; }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🎉</div>
+        <h1>太棒了！</h1>
+        <p>当前没有需要复习的单词，<br>去学习新词或玩个游戏吧！</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'study' %}" class="btn">学习新词</a>
+            <a href="{% url 'snake_game' %}" class="btn" style="background: #8b5cf6;">玩游戏</a>
+        </div>
+    </div>
+</body>
+</html>

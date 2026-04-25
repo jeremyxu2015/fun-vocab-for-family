@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF导入单词 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-card: #ffffff;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+        .header h1 { font-size: 1.5rem; }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .upload-area:hover { background: rgba(99, 102, 241, 0.05); }
+        .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .upload-text { color: var(--text-secondary); }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .alert-success { background: #d1fae5; color: #065f46; }
+        .alert-error { background: #fed7d7; color: #c53030; }
+        .alert-info { background: #dbeafe; color: #1e40af; }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .history-table th, .history-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+        .history-table th { font-weight: 600; color: var(--text-secondary); }
+        .status-completed { color: var(--success); }
+        .status-failed { color: var(--error); }
+        .status-pending { color: var(--warning); }
+        
+        .tips {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .tips h4 { margin-bottom: 0.5rem; }
+        .tips ul { margin-left: 1.5rem; }
+        .tips li { margin-bottom: 0.25rem; color: var(--text-secondary); }
+        
+        #file-input { display: none; }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .loading.show { display: block; }
+        .spinner {
+            border: 3px solid var(--bg-secondary);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'parent_dashboard' %}">← 返回</a>
+            <h1>📄 PDF导入单词</h1>
+        </div>
+        
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        
+        <div class="card">
+            <h2 style="margin-bottom: 1rem;">上传PDF文件</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                支持从PDF文件中智能提取英语单词和释义，使用AI技术自动识别
+            </p>
+            
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">点击选择PDF文件或拖拽到此处</div>
+                    <input type="file" id="file-input" name="pdf_file" accept=".pdf" required>
+                </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button type="submit" class="btn" id="submit-btn">开始提取单词</button>
+                </div>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在处理PDF文件，请稍候...</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">AI正在识别单词，可能需要10-30秒</p>
+            </div>
+            
+            <div class="tips">
+                <h4>💡 使用提示</h4>
+                <ul>
+                    <li>支持扫描版PDF（需要文字可识别）</li>
+                    <li>文件大小限制：10MB</li>
+                    <li>每次最多提取200个单词</li>
+                    <li>已存在的单词会自动跳过</li>
+                    <li>建议使用课本、词汇表的PDF文件</li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if import_history %}
+        <div class="card">
+            <h2 style="margin-bottom: 1rem;">📋 导入历史</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>文件名</th>
+                        <th>提取数量</th>
+                        <th>状态</th>
+                        <th>时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in import_history %}
+                    <tr>
+                        <td>{{ record.file_name }}</td>
+                        <td>{{ record.words_extracted }}</td>
+                        <td class="status-{{ record.status }}">
+                            {% if record.status == 'completed' %}成功
+                            {% elif record.status == 'pending' %}处理中
+                            {% else %}失败{% endif %}
+                        </td>
+                        <td>{{ record.created_at|date:"m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const form = document.getElementById('upload-form');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#4f46e5';
+            uploadArea.style.background = 'rgba(99, 102, 241, 0.1)';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '';
+            uploadArea.style.background = '';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '';
+            uploadArea.style.background = '';
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.endsWith('.pdf')) {
+                fileInput.files = files;
+                uploadArea.querySelector('.upload-text').textContent = files[0].name;
+            }
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                uploadArea.querySelector('.upload-text').textContent = fileInput.files[0].name;
+            }
+        });
+        
+        form.addEventListener('submit', () => {
+            loading.classList.add('show');
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>

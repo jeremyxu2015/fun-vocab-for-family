@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孩子管理 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-card: #ffffff;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header a { color: var(--primary); text-decoration: none; margin-right: 1rem; }
+        .header h1 { font-size: 1.5rem; }
+        
+        .invite-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .invite-card h3 { color: #92400e; margin-bottom: 0.5rem; }
+        .invite-code {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #92400e;
+            letter-spacing: 4px;
+        }
+        
+        .child-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+        }
+        .child-avatar { font-size: 3rem; margin-right: 1.5rem; }
+        .child-info { flex: 1; }
+        .child-name { font-size: 1.25rem; font-weight: 700; }
+        .child-grade { color: var(--text-secondary); font-size: 0.9rem; }
+        .child-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .stat { font-size: 0.85rem; }
+        .stat-value { font-weight: 700; color: var(--primary); }
+        
+        .child-actions { display: flex; gap: 0.5rem; }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: white; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-danger { background: white; border: 1px solid var(--error); color: var(--error); }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-title { font-size: 1.25rem; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'parent_dashboard' %}">← 返回</a>
+            <h1>👨‍👩‍👧 孩子管理</h1>
+        </div>
+        
+        <div class="invite-card">
+            <h3>🎫 家庭邀请码</h3>
+            <p style="color: #92400e; margin-bottom: 0.5rem;">分享此邀请码给孩子注册</p>
+            <div class="invite-code">{{ family.invite_code }}</div>
+        </div>
+        
+        {% if children %}
+            {% for child in children %}
+            <div class="child-card">
+                <span class="child-avatar">{{ child.userprofile.avatar }}</span>
+                <div class="child-info">
+                    <div class="child-name">{{ child.userprofile.nickname }}</div>
+                    <div class="child-grade">{{ child.userprofile.grade|default:"未设置年级" }}</div>
+                    <div class="child-stats">
+                        <div class="stat">已掌握 <span class="stat-value">{{ child.userprofile.userword_set.filter.status }}</span></div>
+                        <div class="stat">用户名: {{ child.username }}</div>
+                    </div>
+                </div>
+                <div class="child-actions">
+                    <a href="{% url 'create_task' %}?child={{ child.id }}" class="btn btn-primary">布置任务</a>
+                    <button class="btn btn-outline" onclick="showResetModal({{ child.id }}, '{{ child.userprofile.nickname }}')">重置密码</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p style="font-size: 3rem; margin-bottom: 1rem;">👶</p>
+                <p>还没有孩子加入家庭</p>
+                <p style="margin-top: 0.5rem;">请将邀请码分享给孩子注册</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- 重置密码模态框 -->
+    <div class="modal" id="resetModal">
+        <div class="modal-content">
+            <h3 class="modal-title">重置密码</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_password">
+                <input type="hidden" name="child_id" id="reset_child_id">
+                <div class="form-group">
+                    <label>新密码</label>
+                    <input type="password" name="new_password" class="form-input" required minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">确认重置</button>
+            </form>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;" onclick="hideResetModal()">取消</button>
+        </div>
+    </div>
+    
+    <script>
+        function showResetModal(childId, name) {
+            document.getElementById('reset_child_id').value = childId;
+            document.getElementById('resetModal').classList.add('show');
+        }
+        function hideResetModal() {
+            document.getElementById('resetModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

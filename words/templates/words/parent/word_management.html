@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词管理 - 词趣家庭</title>
+    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-card: #ffffff;
+            --bg-secondary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .header h1 { font-size: 1.5rem; }
+        .header-actions a {
+            margin-left: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .search-bar input, .search-bar select {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .search-bar input { flex: 1; }
+        
+        .word-table {
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .word-table th, .word-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+        .word-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        .word-table tr:last-child td { border-bottom: none; }
+        .word-table tr:hover td { background: rgba(99, 102, 241, 0.05); }
+        
+        .word-cell { font-weight: 600; color: var(--primary); }
+        .actions a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-right: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .actions a.delete { color: var(--error); }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .alert-success { background: #d1fae5; color: #065f46; }
+        .alert-error { background: #fed7d7; color: #c53030; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="{% url 'parent_dashboard' %}" style="color: var(--primary); text-decoration: none;">← 返回</a>
+                <h1 style="display: inline; margin-left: 1rem;">📚 单词管理</h1>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'add_word' %}">添加单词</a>
+                <a href="{% url 'bulk_add_words' %}">批量导入</a>
+                <a href="{% url 'pdf_import' %}">PDF导入</a>
+            </div>
+        </div>
+        
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        
+        <form class="search-bar" method="get">
+            <input type="text" name="search" placeholder="搜索单词或释义..." value="{{ search }}">
+            <select name="category">
+                <option value="">全部分类</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" style="padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">搜索</button>
+        </form>
+        
+        {% if words %}
+        <table class="word-table">
+            <thead>
+                <tr>
+                    <th>单词</th>
+                    <th>音标</th>
+                    <th>释义</th>
+                    <th>分类</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for word in words %}
+                <tr>
+                    <td class="word-cell">{{ word.word }}</td>
+                    <td>{{ word.pronunciation|default:"-" }}</td>
+                    <td>{{ word.definition|truncatechars:30 }}</td>
+                    <td>{{ word.category|default:"-" }}</td>
+                    <td class="actions">
+                        <a href="{% url 'edit_word' word.id %}">编辑</a>
+                        <a href="{% url 'delete_word' word.id %}" class="delete" onclick="return confirm('确定删除？')">删除</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p style="font-size: 3rem; margin-bottom: 1rem;">📭</p>
+            <p>还没有单词，点击上方按钮添加</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
