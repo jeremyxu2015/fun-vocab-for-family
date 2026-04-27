@@ -18,7 +18,7 @@
         .container { max-width: 700px; margin: 0 auto; }
         .header { display: flex; align-items: center; margin-bottom: 2rem; }
         .header a { color: var(--primary); text-decoration: none; margin-right: 1rem; }
-        
+
         .card {
             background: white;
             border-radius: 16px;
@@ -26,7 +26,7 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 1.5rem;
         }
-        
+
         .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid #e2e8f0; }
         .tab {
             padding: 0.75rem 1.5rem;
@@ -36,10 +36,10 @@
             margin-bottom: -2px;
         }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
+
         .form-group { margin-bottom: 1.25rem; }
         .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
         .form-input, textarea {
@@ -51,7 +51,7 @@
         }
         textarea { min-height: 200px; font-family: monospace; }
         .form-input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-        
+
         .btn {
             padding: 1rem 2rem;
             background: var(--primary);
@@ -63,7 +63,7 @@
             cursor: pointer;
         }
         .btn:hover { background: var(--primary-dark); }
-        
+
         .hint {
             background: #f1f5f9;
             padding: 1rem;
@@ -80,17 +80,18 @@
             <a href="{% url 'word_management' %}">← 返回</a>
             <h1>批量导入单词</h1>
         </div>
-        
+
         <div class="card">
             <div class="tabs">
                 <div class="tab active" data-tab="text">文本粘贴</div>
                 <div class="tab" data-tab="file">文件上传</div>
             </div>
-            
-            <form method="post">
+
+            <!-- 修复：增加 enctype="multipart/form-data"，否则文件上传无效 -->
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="mode" value="text">
-                
+
                 <div class="tab-content active" id="text-tab">
                     <div class="form-group">
                         <label class="form-label">粘贴单词内容</label>
@@ -103,7 +104,7 @@ cat | n. 猫"></textarea>
                         格式：<code>单词 | 释义 | 音标(可选) | 难度(可选)</code>
                     </div>
                 </div>
-                
+
                 <div class="tab-content" id="file-tab">
                     <div class="form-group">
                         <label class="form-label">上传文件</label>
@@ -113,11 +114,11 @@ cat | n. 猫"></textarea>
                         支持 CSV 和 Excel 文件，第一列为单词，第二列为释义
                     </div>
                 </div>
-                
+
                 <button type="submit" class="btn" style="margin-top: 1.5rem;">开始导入</button>
             </form>
         </div>
-        
+
         <div class="card">
             <h3 style="margin-bottom: 1rem;">💡 推荐使用PDF导入</h3>
             <p style="color: #64748b; margin-bottom: 1rem;">
@@ -126,14 +127,14 @@ cat | n. 猫"></textarea>
             <a href="{% url 'pdf_import' %}" class="btn" style="display: inline-block; text-decoration: none;">去PDF导入</a>
         </div>
     </div>
-    
+
     <script>
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
-                
+
                 const mode = tab.dataset.tab;
                 document.querySelector('input[name="mode"]').value = mode;
                 document.getElementById(mode + '-tab').classList.add('active');

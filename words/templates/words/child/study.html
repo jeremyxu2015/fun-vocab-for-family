@@ -27,7 +27,7 @@
             padding: 1rem;
         }
         .container { max-width: 600px; margin: 0 auto; }
-        
+
         .header {
             display: flex;
             align-items: center;
@@ -38,7 +38,7 @@
             text-decoration: none;
             margin-right: 1rem;
         }
-        
+
         .word-card {
             background: var(--bg-card);
             border-radius: 20px;
@@ -85,7 +85,7 @@
             margin-top: 0.5rem;
             font-style: normal;
         }
-        
+
         .rating-section {
             background: var(--bg-card);
             border-radius: 16px;
@@ -134,7 +134,7 @@
             margin-top: 0.25rem;
             opacity: 0.8;
         }
-        
+
         .task-badge {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -152,27 +152,27 @@
             <a href="{% url 'child_dashboard' %}" class="back-link">← 返回</a>
             <h1>{% if mode == 'review' %}复习单词{% elif mode == 'task' %}学习任务{% else %}学习新词{% endif %}</h1>
         </div>
-        
+
         {% if mode == 'task' and task %}
         <div style="text-align: center;">
             <span class="task-badge">📋 {{ task.title }}</span>
         </div>
         {% endif %}
-        
+
         <div class="word-card">
             <span class="word-mode">
                 {% if mode == 'review' %}复习模式
                 {% elif mode == 'task' %}任务模式
                 {% else %}学习模式{% endif %}
             </span>
-            
+
             <div class="word-text">{{ word.word }}</div>
             {% if word.pronunciation %}
             <div class="word-phonetic">{{ word.pronunciation }}</div>
             {% endif %}
-            
+
             <div class="word-definition">{{ word.definition }}</div>
-            
+
             {% if word.example %}
             <div class="word-example">
                 {{ word.example }}
@@ -182,13 +182,15 @@
             </div>
             {% endif %}
         </div>
-        
+
         <div class="rating-section">
             <div class="rating-title">这个单词你记得怎么样？</div>
             <div class="rating-buttons">
+                <!-- 修复：增加 mode 隐藏字段，让 answer 视图知道当前模式，从而正确跳转 -->
                 <form method="post" action="{% url 'answer' word.id %}" style="flex: 1;">
                     {% csrf_token %}
                     <input type="hidden" name="quality" value="1">
+                    <input type="hidden" name="mode" value="{{ mode }}">
                     <button type="submit" class="rating-btn hard">
                         😅 没记住
                         <span class="rating-label">重新学习</span>
@@ -197,6 +199,7 @@
                 <form method="post" action="{% url 'answer' word.id %}" style="flex: 1;">
                     {% csrf_token %}
                     <input type="hidden" name="quality" value="2">
+                    <input type="hidden" name="mode" value="{{ mode }}">
                     <button type="submit" class="rating-btn medium">
                         🤔 有点印象
                         <span class="rating-label">继续复习</span>
@@ -205,6 +208,7 @@
                 <form method="post" action="{% url 'answer' word.id %}" style="flex: 1;">
                     {% csrf_token %}
                     <input type="hidden" name="quality" value="3">
+                    <input type="hidden" name="mode" value="{{ mode }}">
                     <button type="submit" class="rating-btn easy">
                         😊 记住了
                         <span class="rating-label">延长复习</span>
@@ -213,7 +217,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         // 自动朗读单词
         if ('speechSynthesis' in window) {
