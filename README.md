@@ -100,9 +100,3 @@ vocab/
 ## 许可证
 
 MIT License
-
-## 部分文件来源
-
-https://github.com/jeremyxu2015/vocabmaster.git
-
-- 这也是我做的，不要说我侵权
