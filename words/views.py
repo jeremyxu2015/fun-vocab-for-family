@@ -110,7 +110,7 @@ def parent_login(request):
         else:
             messages.error(request, '用户名或密码错误')
 
-    return render(request, 'words/parent/parent_login.html')
+    return render(request, 'words/parent_login.html')
 
 
 def child_login(request):
@@ -140,7 +140,7 @@ def child_login(request):
         else:
             messages.error(request, '用户名或密码错误')
 
-    return render(request, 'words/child/child_login.html')
+    return render(request, 'words/child_login.html')
 
 
 def parent_register(request):
@@ -153,7 +153,7 @@ def parent_register(request):
 
         if User.objects.filter(username=username).exists():
             messages.error(request, '用户名已存在')
-            return render(request, 'words/parent/parent_register.html')
+            return render(request, 'words/parent_register.html')
 
         # 创建家庭
         family = Family.objects.create(name=family_name)
@@ -172,7 +172,7 @@ def parent_register(request):
         login(request, user)
         return redirect('parent_dashboard')
 
-    return render(request, 'words/parent/parent_register.html')
+    return render(request, 'words/parent_register.html')
 
 
 def child_register(request):
@@ -190,11 +190,11 @@ def child_register(request):
             family = Family.objects.get(invite_code=invite_code)
         except Family.DoesNotExist:
             messages.error(request, '邀请码无效，请向家长确认')
-            return render(request, 'words/child/child_register.html')
+            return render(request, 'words/child_register.html')
 
         if User.objects.filter(username=username).exists():
             messages.error(request, '用户名已存在')
-            return render(request, 'words/child/child_register.html')
+            return render(request, 'words/child_register.html')
 
         # 创建用户
         user = User.objects.create_user(username=username, password=password)
@@ -211,7 +211,7 @@ def child_register(request):
         login(request, user)
         return redirect('child_dashboard')
 
-    return render(request, 'words/child/child_register.html')
+    return render(request, 'words/child_register.html')
 
 
 def logout_view(request):
@@ -728,7 +728,7 @@ def child_dashboard(request):
         'active_tasks': active_tasks,
         'game_progress': game_progress,
     }
-    return render(request, 'words/child/dashboard.html', context)
+    return render(request, 'words/dashboard.html', context)
 
 
 @login_required
@@ -752,7 +752,7 @@ def study(request):
         )
         if task_words.exists():
             word = random.choice(list(task_words))
-            return render(request, 'words/child/study.html', {
+            return render(request, 'words/study.html', {
                 'word': word,
                 'mode': 'task',
                 'task': task
@@ -766,7 +766,7 @@ def study(request):
         return redirect('review')
 
     word = random.choice(list(new_words))
-    return render(request, 'words/child/study.html', {'word': word, 'mode': 'learning'})
+    return render(request, 'words/study.html', {'word': word, 'mode': 'learning'})
 
 
 @login_required
@@ -781,9 +781,9 @@ def review(request):
     ).select_related('word').first()
 
     if not due:
-        return render(request, 'words/child/all_caught_up.html')
+        return render(request, 'words/all_caught_up.html')
 
-    return render(request, 'words/child/study.html', {
+    return render(request, 'words/study.html', {
         'user_word': due,
         'word': due.word,
         'mode': 'review'
@@ -821,6 +821,11 @@ def answer(request, word_id):
 
         user_word.save()
 
+        # ======================
+        # 学习积分
+        # ======================
+        request.user.userprofile.add_points(5)
+
         # 更新今日统计
         today = timezone.now().date()
         stats, _ = DailyStats.objects.get_or_create(user=request.user, date=today)
@@ -854,7 +859,7 @@ def training(request):
     new_count = weak_words.filter(status='new').count()
     total_learned = UserWord.objects.filter(user=child).count()
 
-    return render(request, 'words/child/training.html', {
+    return render(request, 'words/training.html', {
         'weak_count': weak_count,
         'low_ease': low_ease,
         'familiar_count': familiar_count,
@@ -975,6 +980,8 @@ def training_answer(request):
         elif user_word.correct_count >= 2:
             user_word.status = 'familiar'
         user_word.save()
+        # 强化训练积分
+        request.user.userprofile.add_points(3)
         return JsonResponse({
             'correct': True,
             'message': '正确！继续加油 💪',
@@ -1002,7 +1009,7 @@ def training_answer(request):
 @child_required
 def snake_game(request):
     """贪吃蛇背单词游戏"""
-    return render(request, 'words/child/snake_game.html')
+    return render(request, 'words/snake_game.html')
 
 
 @login_required
@@ -1092,6 +1099,8 @@ def snake_answer(request):
     if correct:
         calculate_next_review(user_word, 5)
 
+        request.user.userprofile.add_points(10)
+
         score = 10 + (user_word.correct_count * 2)
 
         return JsonResponse({
@@ -1136,7 +1145,7 @@ def game_study(request):
     options = other_words + [word]
     random.shuffle(options)
 
-    return render(request, 'words/child/game.html', {
+    return render(request, 'words/game.html', {
         'word': word,
         'options': options,
         'progress': progress,
@@ -1168,6 +1177,7 @@ def game_answer(request):
         if progress.combo > progress.max_combo:
             progress.max_combo = progress.combo
         points = progress.add_score(10)
+        request.user.userprofile.add_points(10)
 
         calculate_next_review(user_word, 5)
 

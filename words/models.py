@@ -45,6 +45,8 @@ class UserProfile(models.Model):
     avatar = models.CharField(max_length=10, blank=True, default='👶', verbose_name='头像emoji')
     daily_goal = models.IntegerField(default=10, verbose_name='每日目标')
     current_streak = models.IntegerField(default=0, verbose_name='连续天数')
+    points = models.IntegerField(default=0, verbose_name='总积分')
+    level = models.IntegerField(default=1, verbose_name='等级')
     is_deleted = models.BooleanField(default=False, verbose_name='已删除')
     
     class Meta:
@@ -62,6 +64,16 @@ class UserProfile(models.Model):
     @property
     def is_child(self):
         return self.role == 'child'
+    
+    def add_points(self, amount):
+        """增加积分并自动升级"""
+
+        self.points += amount
+
+        # 每100积分升级
+        self.level = self.points // 100 + 1
+
+        self.save()
 
 class Word(models.Model):
     word = models.CharField(max_length=100, unique=True, verbose_name='单词')

@@ -4,431 +4,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的学习 - VocabMaster</title>
-    <link rel="icon" href="{% static 'words/images/favicon.ico' %}" type="image/x-icon">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --info: #3b82f6;
-            --bg-card: #ffffff;
-            --bg-secondary: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --radius-lg: 16px;
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            --sidebar-width: 240px;
-        }
+    <title>学习中心 - 词趣家庭</title>
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        .layout {
+            display: flex;
             min-height: 100vh;
-            display: flex;
         }
 
-        /* ========== 侧边栏 ========== */
+        /* ===== 左侧边栏 ===== */
         .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: var(--sidebar-width);
-            background: var(--bg-card);
-            box-shadow: 2px 0 10px rgba(0,0,0,0.06);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            overflow-y: auto;
-            transition: transform 0.3s ease;
+            width: 280px;
+            background: #eef1f7;
+            padding: 24px;
         }
 
-        .sidebar-logo {
-            padding: 1.5rem;
-            font-size: 1.35rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            border-bottom: 1px solid var(--bg-secondary);
-            flex-shrink: 0;
-        }
-
-        .sidebar-section {
-            padding: 1rem 0.75rem 0.25rem;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 0.5rem 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.7rem 0.85rem;
-            border-radius: 10px;
-            text-decoration: none;
-            color: var(--text-primary);
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.15s;
-        }
-        .sidebar-link:hover {
-            background: var(--bg-secondary);
-            color: var(--primary);
-        }
-        .sidebar-link.active {
-            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
-            color: var(--primary);
-            font-weight: 600;
-        }
-        .sidebar-link .link-icon {
-            font-size: 1.2rem;
-            width: 28px;
+        /* ===== 用户卡片 ===== */
+        .sidebar-profile {
+            background: white;
+            border-radius: 20px;
+            padding: 24px 20px;
             text-align: center;
-            flex-shrink: 0;
-        }
-        .sidebar-link .link-badge {
-            margin-left: auto;
-            background: var(--warning);
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
         }
 
-        .sidebar-footer {
-            padding: 0.75rem;
-            border-top: 1px solid var(--bg-secondary);
-            flex-shrink: 0;
-        }
-        .sidebar-footer .sidebar-link {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-        .sidebar-footer .sidebar-link:hover {
-            color: var(--error);
-        }
-
-        /* ========== 移动端菜单按钮 ========== */
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1100;
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: var(--bg-card);
-            box-shadow: var(--shadow-md);
-            border: none;
-            cursor: pointer;
-            font-size: 1.3rem;
+        .sidebar-avatar {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 52px;
         }
 
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 999;
-        }
-
-        /* ========== 主内容 ========== */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex: 1;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        /* 欢迎区域 */
-        .welcome-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
-        }
-        .welcome-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 200px;
-            height: 200px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-        }
-        .welcome-header h1 {
-            margin: 0;
-            font-size: 1.75rem;
-            font-weight: 800;
-            position: relative;
-        }
-        .welcome-header p {
-            margin: 0.5rem 0 0 0;
-            opacity: 0.9;
-            position: relative;
-        }
-
-        /* 作业提醒 */
-        .homework-alert {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 2px solid #f59e0b;
-            border-radius: var(--radius-lg);
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-md);
-        }
-        .homework-alert h3 { margin: 0; color: #92400e; font-size: 1rem; }
-        .homework-alert p { margin: 0.25rem 0 0 0; color: #b45309; font-size: 0.875rem; }
-        .btn-go {
-            background: #b45309;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.875rem;
-            white-space: nowrap;
-            margin-left: 1rem;
-        }
-
-        /* 卡片 */
-        .section-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-        .section-title {
-            font-size: 1.125rem;
+        .sidebar-name {
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 1.25rem;
-            color: var(--text-primary);
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .sidebar-grade {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 18px;
+        }
+
+        .sidebar-info {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #222;
         }
 
-        /* 统计 */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+        .sidebar-info-icon {
+            width: 24px;
             text-align: center;
+            font-size: 20px;
         }
-        .stat-item {
-            padding: 1rem;
-            background: var(--bg-secondary);
+
+        .sidebar-info-value {
+            font-weight: 700;
+            color: #ff9800;
+        }
+
+        /* ===== 导航菜单 ===== */
+        .menu {
+            background: white;
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .menu a {
+            display: block;
+            text-decoration: none;
+            color: #333;
+            padding: 14px 16px;
             border-radius: 12px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+            font-size: 15px;
+            font-weight: 600;
         }
-        .stat-value {
-            font-size: 1.5rem;
+
+        .menu a:hover {
+            background: #f5f7fb;
+        }
+
+        .menu a.active {
+            background: #4f7cff;
+            color: white;
+        }
+
+        /* ===== 主内容 ===== */
+        .main {
+            flex: 1;
+            padding: 32px;
+        }
+
+        .page-title {
+            font-size: 30px;
             font-weight: 800;
-            color: var(--primary);
-            line-height: 1;
-            margin-bottom: 0.25rem;
-        }
-        .stat-value.success { color: var(--success); }
-        .stat-value.warning { color: var(--warning); }
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            color: #1a1a2e;
         }
 
-        /* 消息提示 */
-        .alert {
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
-        .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+        /* ===== 数据卡片 ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        /* 动画 */
-        .fade-in { animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        /* ========== 响应式 ========== */
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-overlay.open { display: block; }
-            .menu-toggle { display: flex; }
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-                padding-top: 4.5rem;
+        .stat-icon {
+            font-size: 34px;
+            margin-bottom: 12px;
+        }
+
+        .stat-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a1a2e;
+        }
+
+        /* ===== 快捷操作 ===== */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .action-icon {
+            font-size: 42px;
+            margin-bottom: 14px;
+        }
+
+        .action-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .action-desc {
+            color: #666;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                flex-direction: column;
             }
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .main {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- 移动端菜单按钮 -->
-    <button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+<div class="layout">
 
-    <!-- 移动端遮罩 -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <!-- ===== 左侧边栏 ===== -->
+    <aside class="sidebar">
 
-    <!-- ========== 侧边栏 ========== -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-logo">📚 VocabMaster</div>
+        <!-- 用户卡片 -->
+        <div class="sidebar-profile">
 
-        <div class="sidebar-section">导航</div>
-        <nav class="sidebar-nav">
-            <a href="{% url 'dashboard' %}" class="sidebar-link active">
-                <span class="link-icon">🏠</span> 首页
-            </a>
-            <a href="{% url 'study' %}" class="sidebar-link">
-                <span class="link-icon">📖</span> 学习新词
-            </a>
-            <a href="{% url 'review' %}" class="sidebar-link">
-                <span class="link-icon">🔄</span> 复习单词
-                {% if due_count > 0 %}
-                <span class="link-badge">{{ due_count }}</span>
-                {% endif %}
+            <div class="sidebar-avatar">
+                {{ profile.avatar }}
+            </div>
+
+            <div class="sidebar-name">
+                {{ profile.nickname }}
+            </div>
+
+            <div class="sidebar-grade">
+                {{ profile.grade }}
+            </div>
+
+            <div class="sidebar-info">
+                <span class="sidebar-info-icon">🏆</span>
+                <span>积分：</span>
+                <span class="sidebar-info-value">
+                    {{ profile.points }}
+                </span>
+            </div>
+
+            <div class="sidebar-info">
+                <span class="sidebar-info-icon">🎖</span>
+                <span>等级：</span>
+                <span class="sidebar-info-value">
+                    Lv.{{ profile.level }}
+                </span>
+            </div>
+
+        </div>
+
+        <!-- 菜单 -->
+        <div class="menu">
+            <a href="{% url 'child_dashboard' %}" class="active">
+                🏠 学习中心
             </a>
 
-            <div class="sidebar-section">趣味学习</div>
-            <a href="{% url 'training' %}" class="sidebar-link">
-                <span class="link-icon">🎯</span> 强化训练
-            </a>
-            <a href="{% url 'snake_game' %}" class="sidebar-link">
-                <span class="link-icon">🐍</span> 贪吃蛇背词
-            </a>
-            <a href="{% url 'game_study' %}" class="sidebar-link">
-                <span class="link-icon">🎮</span> 游戏模式
+            <a href="{% url 'study' %}">
+                📚 学习新词
             </a>
 
-            <div class="sidebar-section">排行与数据</div>
-            <a href="{% url 'ranking' %}" class="sidebar-link">
-                <span class="link-icon">🏆</span> 班级排名
+            <a href="{% url 'review' %}">
+                🔁 复习单词
             </a>
-        </nav>
 
-        <div class="sidebar-footer">
-            <a href="{% url 'change_password' %}" class="sidebar-link">
-                <span class="link-icon">🔐</span> 修改密码
+            <a href="{% url 'training' %}">
+                ⚡ 强化训练
             </a>
-            <a href="{% url 'logout' %}" class="sidebar-link">
-                <span class="link-icon">🚪</span> 退出登录
+
+            <a href="{% url 'game_study' %}">
+                🎮 单词游戏
+            </a>
+
+            <a href="{% url 'snake_game' %}">
+                🐍 贪吃蛇游戏
+            </a>
+
+            <a href="{% url 'change_password' %}">
+                🔐 修改密码
+            </a>
+
+            <a href="{% url 'logout' %}">
+                🚪 退出登录
             </a>
         </div>
+
     </aside>
 
-    <!-- ========== 主内容 ========== -->
-    <div class="main-content">
-        <div class="container">
 
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-            {% endif %}
+    <!-- ===== 主区域 ===== -->
+    <main class="main">
 
-            <!-- 欢迎区域 -->
-            <div class="welcome-header fade-in">
-                <h1>👋 你好，{{ user.userprofile.real_name|default:user.username }}！</h1>
-                <p>今天也是背单词的好日子，继续保持！</p>
+        <div class="page-title">
+            👋 欢迎回来，{{ profile.nickname }}
+        </div>
+
+
+        <!-- 数据统计 -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon">📘</div>
+                <div class="stat-title">今日学习</div>
+                <div class="stat-value">{{ today_learned }}</div>
             </div>
 
-            <!-- 今日作业提醒 -->
-            {% if homework %}
-            <div class="homework-alert fade-in">
-                <div>
-                    <h3>📋 今日作业：{{ homework.title }}</h3>
-                    <p>截止：{{ homework.due_date|date:"m月d日" }} | 共 {{ homework.words.count }} 个单词</p>
-                </div>
-                <span class="btn-go" style="cursor: default;">请从侧栏进入学习</span>
+            <div class="stat-card">
+                <div class="stat-icon">🔁</div>
+                <div class="stat-title">今日复习</div>
+                <div class="stat-value">{{ today_reviewed }}</div>
             </div>
-            {% endif %}
 
-            <!-- 学习统计 -->
-            <div class="section-card fade-in">
-                <h2 class="section-title">📊 我的数据</h2>
-                <div class="stats-row">
-                    <div class="stat-item">
-                        <div class="stat-value">{{ learned_count|default:0 }}</div>
-                        <div class="stat-label">已掌握</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value warning">{{ due_count|default:0 }}</div>
-                        <div class="stat-label">待复习</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value success">{{ my_rank|default:"-" }}</div>
-                        <div class="stat-label">班级排名</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ user.userprofile.current_streak|default:0 }}</div>
-                        <div class="stat-label">连续天数</div>
-                    </div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-title">已掌握单词</div>
+                <div class="stat-value">{{ mastered_count }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏰</div>
+                <div class="stat-title">待复习</div>
+                <div class="stat-value">{{ due_count }}</div>
             </div>
 
         </div>
-    </div>
 
-    <script>
-        const toggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
 
-        toggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('open');
-        });
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('open');
-        });
-    </script>
+        <!-- 快捷功能 -->
+        <div class="action-grid">
+
+            <a href="{% url 'study' %}" class="action-card">
+                <div class="action-icon">📚</div>
+                <div class="action-title">学习新词</div>
+                <div class="action-desc">
+                    学习今天的新单词，提升词汇量。
+                </div>
+            </a>
+
+            <a href="{% url 'review' %}" class="action-card">
+                <div class="action-icon">🔁</div>
+                <div class="action-title">开始复习</div>
+                <div class="action-desc">
+                    使用记忆曲线复习，提高长期记忆。
+                </div>
+            </a>
+
+            <a href="{% url 'training' %}" class="action-card">
+                <div class="action-icon">⚡</div>
+                <div class="action-title">强化训练</div>
+                <div class="action-desc">
+                    重点强化薄弱单词。
+                </div>
+            </a>
+
+            <a href="{% url 'game_study' %}" class="action-card">
+                <div class="action-icon">🎮</div>
+                <div class="action-title">闯关游戏</div>
+                <div class="action-desc">
+                    一边游戏一边背单词。
+                </div>
+            </a>
+
+        </div>
+
+    </main>
+
+</div>
+
 </body>
 </html>
+```

@@ -143,6 +143,12 @@
                         <div class="stat">学习中 <span class="stat-value">{{ child.stats.learning }}</span></div>
                         <div class="stat">待复习 <span class="stat-value">{{ child.stats.due_count }}</span></div>
                         <div class="stat">用户名: {{ child.user.username }}</div>
+                        <div>
+                            ⭐ {{ child.profile.points }} 分
+                        </div>
+                        <div>
+                            🎖 Lv.{{ child.profile.level }}
+                        </div>
                     </div>
                 </div>
                 <div class="child-actions">
